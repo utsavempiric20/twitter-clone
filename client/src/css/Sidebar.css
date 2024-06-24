@@ -1,0 +1,24 @@
+.tweetBtn {
+  border: none;
+  color: white;
+  font-weight: 600;
+  width: 70%;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #1da1f2;
+  margin-top: 20px;
+}
+
+.sideMain {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.listItemTxt .css-10hburv-MuiTypography-root {
+  color: #0f1419;
+  font-weight: 700;
+}
+.css-1t1j96h-MuiPaper-root-MuiDialog-paper {
+  width: 100%;
+}

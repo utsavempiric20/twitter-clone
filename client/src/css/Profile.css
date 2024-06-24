@@ -1,0 +1,49 @@
+.profileComponent {
+  width: 70%;
+}
+
+.profileComponent .profileComponentHeader {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 15px;
+  margin-left: 20px;
+}
+
+.tweetCount {
+  color: #5b7083;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.profileInfo {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+.profileInfo .profileAvatar {
+  height: 100px;
+  width: 100px;
+}
+
+.profileInfo .profileUsernameTxt {
+  color: #0f1419;
+  font-weight: 700;
+  font-size: 20px;
+  margin-top: 10px;
+}
+
+.tabComponent {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.tabComponent .tabLabelTxt {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.tabComponent .css-13xfq8m-MuiTabPanel-root {
+  padding: 0px;
+}

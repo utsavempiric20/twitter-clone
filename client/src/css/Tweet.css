@@ -1,0 +1,46 @@
+.tweetComponent {
+  border-bottom: 1px solid #d7d7d7;
+}
+
+.tweetComponentHeader {
+  display: flex;
+  flex-direction: row;
+  padding: 5px 15px;
+}
+
+.toolHomeTxt {
+  font-weight: "700";
+  font-size: "18px";
+}
+
+.addTweetComponent {
+  padding: 10px 15px;
+}
+
+.writeTweetComponent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.tweetTextArea {
+  padding: 0px 15px;
+  width: 100%;
+}
+
+.bottomTweetComponent {
+  display: flex;
+  flex-direction: row;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.tweetCBtn {
+  border: none;
+  color: white;
+  font-weight: 600;
+  width: 20%;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #1da1f2;
+}

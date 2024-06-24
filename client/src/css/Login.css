@@ -1,0 +1,177 @@
+.divideScreen {
+  display: flex;
+  flex-direction: row;
+}
+
+.leftSide {
+  background-color: #1da1f2;
+  height: 100vh;
+  width: 50%;
+}
+
+.rightSide {
+  height: 100vh;
+  width: 50%;
+}
+
+.twitterText {
+  color: white;
+  font-size: 32px;
+  line-height: 40px;
+  margin-top: 30px;
+}
+
+.twitterLogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loginTxt {
+  color: rgb(55, 56, 84);
+  font-weight: 700;
+  font-size: 32px;
+}
+
+.loginPara {
+  opacity: 50%;
+  font-weight: 500;
+  font-size: 18px;
+  margin: 5px 0px 15px 0px;
+}
+
+.loginForm {
+  margin-top: 25px;
+  text-align: left;
+}
+
+.loginBtn {
+  border: none;
+  color: white;
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  font-size: 18px;
+  background-color: #1da1f2;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.loginBtn:disabled {
+  opacity: 50%;
+}
+
+.signBtn {
+  border: none;
+  color: white;
+  width: 50%;
+  height: 50px;
+  border-radius: 12px;
+  font-size: 18px;
+  background-color: #1da1f2;
+  margin-top: 20px;
+}
+
+.signBtn:disabled {
+  opacity: 50%;
+}
+
+.loginForm form label {
+  color: #373854;
+  font-weight: 600;
+  display: flex;
+}
+
+.loginForm form .inputBox {
+  height: 45px;
+  box-shadow: 0px 6px 30px #d7d7d7;
+  color: #1da1f2;
+}
+
+.loginAccount {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.rememberTxt {
+  opacity: 50%;
+  font-size: 14px;
+}
+
+.forgotPassText {
+  font-weight: 500;
+  color: #1da1f2;
+  font-size: 14px;
+}
+
+.dontAccountTxt {
+  font-weight: 500;
+  opacity: 50%;
+  font-size: 14px;
+}
+
+.signUpTxt {
+  font-weight: 500;
+  color: #1da1f2;
+  font-size: 14px;
+}
+
+.signNBackBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.backBtn {
+  border: none;
+  color: #373854;
+  width: 50%;
+  height: 50px;
+  border-radius: 12px;
+  font-size: 18px;
+  background-color: #f0f0f0;
+  margin-top: 20px;
+  text-decoration: none;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  border-radius: 100%;
+  height: 70px;
+  width: 70px;
+  box-shadow: 0px 3px 30px #d9d9d9;
+}
+
+.profileTxt {
+  color: #373854;
+  font-weight: 500;
+}
+
+.mainProfile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 10px 0px;
+}
+
+.profile-btn {
+  color: #1da1f2;
+  font-weight: 500;
+}
+
+.loginForm .mainProfile input[type="file"] {
+  display: none;
+}
+
+.profileImage {
+  height: 40px;
+  width: 40px;
+}
