@@ -6,6 +6,7 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import UserPosts from "../components/ProfileComponents/UserPosts";
 import UserLikes from "../components/ProfileComponents/UserLikes";
+import UserTweetNReply from "../components/ProfileComponents/UserTweetNReply";
 
 const Profile = ({ userDetails, authContract, twitterContract, account }) => {
   const [countTweet, setCountTweet] = useState(0);
@@ -84,7 +85,15 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
                 userDetails={userDetails}
               />
             </TabPanel>
-            <TabPanel value="2">Item Two</TabPanel>
+            <TabPanel value="2">
+              <UserTweetNReply
+                authContract={authContract}
+                twitterContract={twitterContract}
+                account={account}
+                setCountTweet={setCountTweet}
+                userDetails={userDetails}
+              />
+            </TabPanel>
             <TabPanel value="3">
               <UserLikes
                 authContract={authContract}

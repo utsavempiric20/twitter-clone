@@ -30,7 +30,6 @@ const SinglePost = ({
   userDetails,
 }) => {
   const { type, postId } = useParams();
-  console.log("type", type);
   const [post, setPost] = useState([]);
   const [addComment, setAddComment] = useState("");
   const [commentLength, setCommentLength] = useState(240);
@@ -181,6 +180,9 @@ const SinglePost = ({
           const isLikeComment = await twitterContract.getCommentLikedByUser(
             commentId
           );
+          const commentsLength = await twitterContract.getReplyOnCommment(
+            singleComment.commentId
+          );
           return {
             commentAvatarTxt: userData[1].charAt(0),
             user: singleComment.user,
@@ -191,6 +193,7 @@ const SinglePost = ({
             postUserName: userData[1],
             isLikeComment: isLikeComment,
             commentTime: singleComment.commentTime,
+            postCommentLength: commentsLength.length,
           };
         })
       );
@@ -206,6 +209,10 @@ const SinglePost = ({
           const isLikeComment = await twitterContract.getCommentLikedByUser(
             commentId
           );
+          const commentsLength = await twitterContract.getReplyOnCommment(
+            singleComment.commentId
+          );
+
           return {
             commentAvatarTxt: userData[1].charAt(0),
             user: singleComment.user,
@@ -216,6 +223,7 @@ const SinglePost = ({
             postUserName: userData[1],
             isLikeComment: isLikeComment,
             commentTime: singleComment.commentTime,
+            postCommentLength: commentsLength.length,
           };
         })
       );
@@ -229,12 +237,12 @@ const SinglePost = ({
       ? twitterContract && fetchComment()
       : twitterContract && fetchCommentReply();
     setIsLoading(false);
-  }, [state, twitterContract]);
+  }, [state, twitterContract, postId]);
 
   return (
     <>
       {isLoading ? (
-        <>Loading</>
+        <></>
       ) : (
         <Box className="singlePostMainComponent">
           <Box component="div" className="userPost" key={post.id}>
@@ -299,11 +307,6 @@ const SinglePost = ({
                     <Link
                       to={`/post/2/${item.commentId}`}
                       style={{ textDecoration: "none" }}
-                      onClick={() => {
-                        setTimeout(() => {
-                          window.location.reload();
-                        }, 500);
-                      }}
                     >
                       <Box className="userDataComponent" component="div">
                         <Avatar
@@ -333,7 +336,7 @@ const SinglePost = ({
                         <IconButton>
                           <ModeCommentOutlinedIcon />
                         </IconButton>
-                        <Typography>0</Typography>
+                        <Typography>{item.postCommentLength}</Typography>
                       </Box>
 
                       <Box className="userInteractionButtons">
