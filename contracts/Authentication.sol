@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 contract Authentication {
     struct User {
@@ -61,7 +61,15 @@ contract Authentication {
 
     function getUserInfo(
         address caller
-    ) external view returns (address, string memory, uint256) {
+    )
+        external
+        view
+        returns (
+            address userAddress,
+            string memory userName,
+            uint256 registerTime
+        )
+    {
         User memory user = userInfo[caller];
         return (user.userAddress, user.userName, user.registerTime);
     }

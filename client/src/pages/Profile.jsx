@@ -7,7 +7,8 @@ import TabPanel from "@mui/lab/TabPanel";
 import UserPosts from "../components/ProfileComponents/UserPosts";
 import UserLikes from "../components/ProfileComponents/UserLikes";
 
-const Profile = () => {
+const Profile = ({ userDetails, authContract, twitterContract, account }) => {
+  const [countTweet, setCountTweet] = useState(0);
   const months = [
     "January",
     "February",
@@ -28,9 +29,6 @@ const Profile = () => {
     event.preventDefault();
     setValue(newValue);
   };
-  const date = new Date(1718950566 * 1000);
-  const month = date.getMonth();
-  const year = date.getFullYear();
   return (
     <>
       <Box className="profileComponent" component="div">
@@ -41,18 +39,22 @@ const Profile = () => {
               fontSize: "19px",
             }}
           >
-            @ub8542
+            @{userDetails.username}
           </Typography>
-          <Typography className="tweetCount">10 Tweets</Typography>
+          <Typography className="tweetCount">{countTweet} Tweets</Typography>
         </Box>
         <Divider />
         <Box className="profileInfo">
           <Avatar className="profileAvatar" sx={{ bgcolor: "#1da1f2" }}>
-            U
+            {userDetails.username}
           </Avatar>
-          <Typography className="profileUsernameTxt">@ub8542</Typography>
+          <Typography className="profileUsernameTxt">
+            @{userDetails.username}
+          </Typography>
           <Typography className="tweetCount">
-            Joined {months[month]} {year}
+            Joined{" "}
+            {months[new Date(userDetails.registerTime * 1000).getMonth()]}{" "}
+            {new Date(userDetails.registerTime * 1000).getFullYear()}
           </Typography>
         </Box>
         <Box className="tabComponent">
@@ -74,11 +76,21 @@ const Profile = () => {
               </TabList>
             </Box>
             <TabPanel value="1">
-              <UserPosts />
+              <UserPosts
+                authContract={authContract}
+                twitterContract={twitterContract}
+                account={account}
+                setCountTweet={setCountTweet}
+                userDetails={userDetails}
+              />
             </TabPanel>
             <TabPanel value="2">Item Two</TabPanel>
             <TabPanel value="3">
-              <UserLikes />
+              <UserLikes
+                authContract={authContract}
+                twitterContract={twitterContract}
+                account={account}
+              />
             </TabPanel>
           </TabContext>
         </Box>

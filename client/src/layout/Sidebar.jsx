@@ -30,15 +30,19 @@ import GifBoxOutlinedIcon from "@mui/icons-material/GifBoxOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import SentimentSatisfiedSharpIcon from "@mui/icons-material/SentimentSatisfiedSharp";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import AlertComponent from "../components/AlertComponent";
 
-const SideBar = () => {
+const SideBar = (props) => {
+  let navigate = useNavigate();
+  let { authContract, twitterContract, account, userDetails, setUserDetails } =
+    props;
   const IconList = [
     { text: "Home", icon: <HomeSharpIcon />, to: "/home" },
     { text: "Explore", icon: <TagOutlinedIcon />, to: "/explore" },
     {
-      text: "Notifications",  
+      text: "Notifications",
       icon: <NotificationsNoneOutlinedIcon />,
       to: "/notifications",
     },
@@ -52,11 +56,33 @@ const SideBar = () => {
     { text: "Profile", icon: <PermIdentityOutlinedIcon />, to: "/profile" },
     { text: "More", icon: <MoreHorizOutlinedIcon />, to: "/more" },
   ];
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [tweetModal, setTweetModal] = useState("");
   const [tweetModalLength, setTweetModalLength] = useState(240);
+  const [userLogOutAlert, setUserLogOutAlert] = useState(false);
+  const [userAvatarTxt, setUserAvatarTxt] = useState("");
+  const handleUserLogOutAlert = () => {
+    setUserLogOutAlert(true);
+    setTimeout(() => {
+      setUserLogOutAlert(false);
+    }, 4000);
+  };
 
   const handleTweet = (e) => {
     const newValue = e.target.value;
@@ -64,13 +90,43 @@ const SideBar = () => {
     setTweetModalLength(240 - newValue.length);
   };
 
-  const addTweet = (event) => {
+  const addTweet = async (event) => {
     event.preventDefault();
-    console.log(tweetModal);
-    setTweetModal("");
-    setTweetModalLength(240);
-    handleClose();
+    try {
+      const addPost = await twitterContract.createPost(tweetModal);
+      await addPost.wait();
+      setTweetModal("");
+      setTweetModalLength(240);
+      handleClose();
+    } catch (error) {
+      console.log(error);
+    }
   };
+
+  const handleLogOut = async () => {
+    try {
+      const response = await authContract.logOut(account);
+      await response.wait();
+      console.log(response);
+      navigate("/", { replace: true });
+      setUserDetails({
+        username: null,
+        registerTime: null,
+      });
+      localStorage.clear();
+    } catch (error) {
+      handleUserLogOutAlert();
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("userInfo"));
+    setUserDetails({
+      username: userData.username,
+      registerTime: userData.registerTime,
+    });
+    setUserAvatarTxt(userData.username.charAt(0));
+  }, [twitterContract, authContract]);
 
   return (
     <>
@@ -106,7 +162,7 @@ const SideBar = () => {
           <ListItem
             style={{ bottom: 0 }}
             secondaryAction={
-              <IconButton edge="end">
+              <IconButton edge="end" onClick={handleLogOut}>
                 <MoreHorizOutlinedIcon />
               </IconButton>
             }
@@ -114,16 +170,24 @@ const SideBar = () => {
             <Link to="/profile" style={{ textDecoration: "none" }}>
               <ListItemButton>
                 <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: blue[500] }}>U</Avatar>
+                  <Avatar sx={{ bgcolor: blue[500] }}>{userAvatarTxt}</Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="@ub8542"
-                  secondary="July 20"
-                  primaryTypographyProps={{ color: "#0F1419", fontWeight: 700 }}
-                  secondaryTypographyProps={{
-                    color: "#5B7083",
-                    fontWeight: 500,
-                  }}
+                  primary={
+                    <Typography sx={{ color: "#0F1419", fontWeight: 700 }}>
+                      @{userDetails.username}
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography sx={{ color: "#5B7083", fontWeight: 500 }}>
+                      {
+                        months[
+                          new Date(userDetails.registerTime * 1000).getMonth()
+                        ]
+                      }{" "}
+                      {new Date(userDetails.registerTime * 1000).getFullYear()}
+                    </Typography>
+                  }
                 />
               </ListItemButton>
             </Link>
@@ -135,8 +199,8 @@ const SideBar = () => {
           <DialogContent>
             <form onSubmit={(event) => addTweet(event)}>
               <Box className="writeTweetComponent">
-                <Avatar sx={{ bgcolor: blue[500], marginRight: "10px" }}>
-                  U
+                <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                  {userAvatarTxt}
                 </Avatar>
                 <TextField
                   inputProps={{ maxLength: 240 }}
@@ -169,7 +233,7 @@ const SideBar = () => {
                 </IconButton>
                 <Box sx={{ flexGrow: 1 }} />
                 <Typography sx={{ marginRight: "20px" }}>
-                  {tweetModalLength} Characters left
+                  {tweetModalLength}/240
                 </Typography>
                 <button className="tweetCBtn" type="submit">
                   Tweet
@@ -179,6 +243,7 @@ const SideBar = () => {
           </DialogContent>
         </Dialog>
       </Box>
+      {userLogOutAlert && <AlertComponent message={"User Is not logged In"} />}
     </>
   );
 };

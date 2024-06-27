@@ -5,68 +5,93 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import ModeCommentOutlinedIcon from "@mui/icons-material/ModeCommentOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import LoopOutlinedIcon from "@mui/icons-material/LoopOutlined";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TimeComponent from "../HomeComponents/TimeComponent";
 import { Link } from "react-router-dom";
 
-const UserLikes = () => {
-  const [like, setLike] = useState([
-    {
-      id: 1,
-      username: "un567",
-      time: 1718953872,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-    {
-      id: 2,
-      username: "rt12",
-      time: 1718950700,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-    {
-      id: 3,
-      username: "utero12",
-      time: 1716256653,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-  ]);
+const UserLikes = ({ authContract, twitterContract, account }) => {
+  const [userLikePosts, setUserLikePosts] = useState([]);
 
-  const handlerCounter = (index) => {
-    let newPostArray = [...like];
-    if (newPostArray[index]["isLike"]) {
-      newPostArray[index]["isLike"] = false;
-      newPostArray[index]["likeCounter"] -= 1;
-      setLike(newPostArray);
-    } else {
-      newPostArray[index]["isLike"] = true;
-      newPostArray[index]["likeCounter"] += 1;
-      setLike(newPostArray);
+  const handlerCounter = async (index) => {
+    try {
+      let newPostArray = [...userLikePosts];
+      const postId = newPostArray[index].postId;
+      if (newPostArray[index]["isLike"]) {
+        newPostArray[index]["isLike"] = false;
+        newPostArray[index]["likes"] -= 1;
+        const dislikePostResponse = await twitterContract.disLikePost(postId);
+        await dislikePostResponse.wait();
+        setUserLikePosts(newPostArray);
+      } else {
+        newPostArray[index]["isLike"] = true;
+        newPostArray[index]["likes"] += 1;
+        const likePostResponse = await twitterContract.likePost(postId);
+        await likePostResponse.wait();
+        setUserLikePosts(newPostArray);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
+
+  useEffect(() => {
+    const allPosts = async () => {
+      const userLikePostData = await twitterContract.getUserLikePosts(1);
+      const newData = await Promise.all(
+        userLikePostData.map(async (id) => {
+          const singlePostData = await twitterContract.getPostDetails(id);
+          const userData = await authContract.getUserInfo(
+            singlePostData.userAddress
+          );
+          const isLikeByUser = await twitterContract.getPostLikedByUser(
+            singlePostData.postId
+          );
+          const commentsLength = await twitterContract.getComments(
+            singlePostData.postId
+          );
+          const postUserAddress = userData[0];
+          const postUserName = userData[1];
+          const postTime = Number(singlePostData.postTime["_hex"]);
+          const likes = Number(singlePostData.likes["_hex"]);
+          const postId = Number(singlePostData.postId);
+
+          return {
+            userAvatarTxt: postUserName.charAt(0),
+            postId: postId,
+            postUserAddress: postUserAddress,
+            content: singlePostData.content,
+            postTime: postTime,
+            likes: likes,
+            postUserName: postUserName,
+            isLike: isLikeByUser,
+            postCommentLength: commentsLength.length,
+          };
+        })
+      );
+      setUserLikePosts(newData);
+    };
+    twitterContract && allPosts();
+  }, [twitterContract]);
 
   return (
     <>
       <Box className="allPostsMainElement" component="div">
-        {like.map((item, index) => {
+        {userLikePosts.map((item, index) => {
           return (
             <Box component="div" className="userPost" key={index}>
-              <Link to={`/post/${item.id}`} style={{ textDecoration: "none" }}>
+              <Link
+                to={`/post/1/${item.postId}`}
+                style={{ textDecoration: "none" }}
+              >
                 <Box className="userDataComponent" component="div">
                   <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                    U
+                    {item.userAvatarTxt}
                   </Avatar>
-                  <Typography className="userTxt">@{item.username}</Typography>
+                  <Typography className="userTxt">
+                    @{item.postUserName}
+                  </Typography>
                   <Typography className="userPostTime">
-                    <TimeComponent time={item.time} />
+                    <TimeComponent time={item.postTime} />
                   </Typography>
                 </Box>
                 <Box className="userTweet">
@@ -75,7 +100,7 @@ const UserLikes = () => {
                     gutterBottom={true}
                     component="p"
                   >
-                    {item.tweet}
+                    {item.content}
                   </Typography>
                 </Box>
               </Link>
@@ -84,14 +109,14 @@ const UserLikes = () => {
                   <IconButton>
                     <ModeCommentOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>{item.postCommentLength}</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
                   <IconButton>
                     <LoopOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>0</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
@@ -107,14 +132,14 @@ const UserLikes = () => {
                       <FavoriteBorderOutlinedIcon />
                     )}
                   </IconButton>
-                  <Typography>{item.likeCounter}</Typography>
+                  <Typography>{item.likes}</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
                   <IconButton>
                     <FileUploadOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>0</Typography>
                 </Box>
               </Box>
               <Divider />

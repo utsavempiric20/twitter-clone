@@ -3,32 +3,50 @@ import "./App.css";
 import MyRoutes from "./components/Route";
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import authAbi from "./contracts/Authentication.json";
+import twitterAbi from "./contracts/Twitter.json";
 
 function App() {
   const [walletData, setWalletData] = useState({
     provider: null,
     signer: null,
-    contract: null,
+    authContract: null,
+    twitterContract: null,
+  });
+  const [account, setAccount] = useState();
+  const [userDetails, setUserDetails] = useState({
+    username: null,
+    registerTime: null,
   });
 
   useEffect(() => {
     const connectWallet = async () => {
-      // const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-      // const contractAbi = abi.abi;
+      const authContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
+      const twitterContractAddress =
+        "0x0b48aF34f4c854F5ae1A3D587da471FeA45bAD52";
+      const authContractAbi = authAbi.abi;
+      const twitterContractAbi = twitterAbi.abi;
       try {
         const { ethereum } = window;
         if (ethereum) {
-          const account = await ethereum.request({
+          const acc = await ethereum.request({
             method: "eth_requestAccounts",
           });
-          const provider = new ethers.providers.Web3Provider(ethereum);
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
           const signer = provider.getSigner();
-          // const contract = await ethers.Contract(
-          //   contractAddress,
-          //   contractAbi,
-          //   signer
-          // );
-          // setWalletData({ provider, signer, contract });
+          const authContract = new ethers.Contract(
+            authContractAddress,
+            authContractAbi,
+            signer
+          );
+          const twitterContract = new ethers.Contract(
+            twitterContractAddress,
+            twitterContractAbi,
+            signer
+          );
+
+          setAccount(acc[0]);
+          setWalletData({ provider, signer, authContract, twitterContract });
         } else {
           alert("install metamask");
         }
@@ -41,7 +59,13 @@ function App() {
   return (
     <>
       <Router>
-        <MyRoutes />
+        <MyRoutes
+          authContract={walletData.authContract}
+          twitterContract={walletData.twitterContract}
+          account={account}
+          userDetails={userDetails}
+          setUserDetails={setUserDetails}
+        />
       </Router>
     </>
   );

@@ -3,24 +3,80 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
 import SideBar from "../layout/Sidebar";
-import MainC from "../pages/Home";
 import SinglePost from "./HomeComponents/SinglePost";
+import Home from "../pages/Home";
 
-const MyRoutes = () => {
+const MyRoutes = ({
+  authContract,
+  twitterContract,
+  account,
+  userDetails,
+  setUserDetails,
+}) => {
   let location = useLocation();
   return (
     <div style={{ display: "flex", width: "60%", margin: "auto" }}>
       {location.pathname === "/" || location.pathname === "/register" ? (
         <></>
       ) : (
-        <SideBar />
+        <SideBar
+          authContract={authContract}
+          twitterContract={twitterContract}
+          account={account}
+          userDetails={userDetails}
+          setUserDetails={setUserDetails}
+        />
       )}
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/home" element={<MainC />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/post/:postId" element={<SinglePost />} />
+        <Route
+          path="/"
+          element={
+            <Login
+              authContract={authContract}
+              account={account}
+              userDetails={userDetails}
+              setUserDetails={setUserDetails}
+            />
+          }
+        />
+        <Route
+          path="/register"
+          element={<Register authContract={authContract} account={account} />}
+        />
+        <Route
+          path="/home"
+          element={
+            <Home
+              userDetails={userDetails}
+              authContract={authContract}
+              twitterContract={twitterContract}
+              account={account}
+            />
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Profile
+              userDetails={userDetails}
+              setUserDetails={setUserDetails}
+              authContract={authContract}
+              twitterContract={twitterContract}
+              account={account}
+            />
+          }
+        />
+        <Route
+          path="/post/:type/:postId"
+          element={
+            <SinglePost
+              authContract={authContract}
+              twitterContract={twitterContract}
+              account={account}
+              userDetails={userDetails}
+            />
+          }
+        />
       </Routes>
     </div>
   );

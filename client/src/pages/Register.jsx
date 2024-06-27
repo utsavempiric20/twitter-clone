@@ -1,16 +1,15 @@
 import "../css/Login.css";
 import twitter from "../assets/Vector.png";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import Alert from "../components/Alert";
+import { Link, useNavigate } from "react-router-dom";
+import AlertComponent from "../components/AlertComponent";
 import ProfilePic from "../assets/profile.jpeg";
 
-const Register = () => {
+const Register = ({ authContract, account }) => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
-  const [isAlert, setIsAlert] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-
   const [registerInfo, setRegisterInfo] = useState({
     username: "",
     email: "",
@@ -18,20 +17,55 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
+  const [confirmAlert, setConfirmAlert] = useState(false);
+  const [userExistAlert, setUserExistAlert] = useState(false);
+
+  const handleConfirmAlert = () => {
+    setConfirmAlert(true);
+    setTimeout(() => {
+      setConfirmAlert(false);
+    }, 4000);
+  };
+
+  const handleUserExistAlert = () => {
+    setUserExistAlert(true);
+    setTimeout(() => {
+      setUserExistAlert(false);
+    }, 4000);
+  };
 
   const handleChange = (e) => {
     setRegisterInfo({ ...registerInfo, [e.target.name]: e.target.value });
-    console.log(registerInfo);
   };
 
-  const registerSubmit = (event) => {
+  const registerSubmit = async (event) => {
     event.preventDefault();
-    if (registerInfo.password !== registerInfo.confirmPassword) {
-      setIsAlert(!isAlert);
-      return;
+
+    try {
+      if (registerInfo.password !== registerInfo.confirmPassword) {
+        handleConfirmAlert();
+        return;
+      }
+      console.log(registerInfo);
+      const response = await authContract.register(
+        registerInfo.username,
+        account
+      );
+      console.log("response", response);
+      await response.wait();
+      console.log("register successfully");
+      setRegisterInfo({
+        username: "",
+        email: "",
+        userDescription: "",
+        password: "",
+        confirmPassword: "",
+      });
+      navigate("/", { replace: true });
+    } catch (error) {
+      handleUserExistAlert();
+      console.log(error);
     }
-    console.log(registerInfo);
-    registerInfo("");
   };
 
   const uploadImage = (e) => {
@@ -50,7 +84,7 @@ const Register = () => {
       </div>
       <div className="rightSide">
         <div className="twitterLogo">
-          <div className="container-md" style={{ width: "50%" }}>
+          <div className="container-md">
             <div className="loginForm">
               <div className="loginTxt">Sign up</div>
               <div className="loginPara">
@@ -176,13 +210,7 @@ const Register = () => {
                     </div>
                   </div>
                 </div>
-                {isAlert ? (
-                  <Alert
-                    message={" Confirm password must be same as Password"}
-                  />
-                ) : (
-                  ""
-                )}
+
                 <div className="signNBackBtn">
                   <button type="submit" className="signBtn">
                     Sign up
@@ -196,6 +224,12 @@ const Register = () => {
           </div>
         </div>
       </div>
+      {confirmAlert && (
+        <AlertComponent
+          message={" Confirm password must be same as Password"}
+        />
+      )}
+      {userExistAlert && <AlertComponent message={"User is already exist"} />}
     </div>
   );
 };

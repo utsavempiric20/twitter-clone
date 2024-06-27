@@ -1,53 +1,52 @@
 import "../css/Login.css";
 import twitter from "../assets/Vector.png";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import AlertComponent from "../components/AlertComponent";
 
-const Login = () => {
+const Login = ({ authContract, account, userDetails, setUserDetails }) => {
+  console.log("login", account);
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
   const [loginInfo, setLoginInfo] = useState({
     username: "",
     password: "",
   });
+  const [isAlert, setIsAlert] = useState(false);
+  const handleAlert = () => {
+    setIsAlert(true);
+    setTimeout(() => {
+      setIsAlert(false);
+    }, 4000);
+  };
 
   const handleChange = (e) => {
     setLoginInfo({ ...loginInfo, [e.target.name]: e.target.value });
-    console.log(loginInfo);
   };
 
-  const logInSubmit = (event) => {
+  const logInSubmit = async (event) => {
     event.preventDefault();
-    if (loginInfo.username === "" && loginInfo.password === "") {
-      return;
+    try {
+      if (loginInfo.username === "" && loginInfo.password === "") {
+        return;
+      }
+      const response = await authContract.logIn(account);
+      await response.wait();
+      const getUserInfo = await authContract.getUserInfo(account);
+      console.log(getUserInfo);
+      const username = getUserInfo[1];
+      const timeToHex = getUserInfo[2];
+      const registerTime = Number(timeToHex["_hex"]);
+      const userObj = { username, registerTime };
+      // setUserDetails({ username: username, registerTime: registerTime });
+      localStorage.setItem("userInfo", JSON.stringify(userObj));
+      navigate("/home", { replace: true });
+      setLoginInfo({ username: "", password: "" });
+    } catch (error) {
+      handleAlert();
+      console.log(error);
     }
-    setLoginInfo("");
   };
-
-  // const connectWallet = async () => {
-  //   const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-  //   const contractAbi = abi.abi;
-  //   try {
-  //     const { ethereum } = window;
-  //     if (ethereum) {
-  //       const account = await ethereum.request({
-  //         method: "eth_requestAccounts",
-  //       });
-  //       const provider = new ethers.providers.Web3Provider(ethereum);
-  //       const signer = provider.getSigner();
-  //       // const contract = await ethers.Contract(
-  //       //   contractAddress,
-  //       //   contractAbi,
-  //       //   signer
-  //       // );
-  //       console.log(signer);
-  //       // setWalletData({ provider, signer, contract });
-  //     } else {
-  //       alert("install metamask");
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
 
   return (
     <div className="divideScreen" style={{ width: "100%" }}>
@@ -57,10 +56,9 @@ const Login = () => {
           <div className="twitterText">twitter</div>
         </div>
       </div>
-
       <div className="rightSide">
         <div className="twitterLogo">
-          <div className="container-md" style={{ width: "50%" }}>
+          <div className="container-md">
             <div className="loginForm">
               <div className="loginTxt">Login</div>
               <div className="loginPara">
@@ -152,6 +150,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+      {isAlert && <AlertComponent message={"User doesn't exist"} />}
     </div>
   );
 };

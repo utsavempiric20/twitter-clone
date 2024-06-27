@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "hardhat/console.sol";
+
 interface IAuthentication {
     function register(string memory _userName, address caller) external;
 
     function logIn(address caller) external;
 
     function logOut(address caller) external;
-
-    function getUserInfo(
-        address caller
-    ) external view returns (address, string memory);
 
     function getMustLoggedIn(address caller) external view returns (bool);
 
@@ -43,6 +41,7 @@ contract Twitter {
         bytes4 commentId;
         string comment;
         uint256 commentTotalLike;
+        uint256 commentTime;
     }
 
     bytes4[] allPosts;
@@ -73,35 +72,6 @@ contract Twitter {
         _;
     }
 
-    modifier isNotLoggedIn() {
-        require(
-            iAuthentication.getIsNotLoggedIn(msg.sender),
-            "User is already logged In"
-        );
-        _;
-    }
-
-    modifier isUserRegistered() {
-        require(
-            iAuthentication.getIsUserRegistered(msg.sender),
-            "User doesn't exist"
-        );
-        _;
-    }
-
-    modifier isNotRegistered() {
-        require(iAuthentication.getIsNotRegistered(msg.sender), "User exist");
-        _;
-    }
-
-    modifier isUserNameExist(string memory _userName) {
-        require(
-            iAuthentication.getIsUserNameExist(_userName),
-            "Username is Exist"
-        );
-        _;
-    }
-
     modifier isPostExist(bytes4 _postId) {
         Post memory post = getPostInfo[_postId];
         require(post.userAddress != address(0), "Post doesn't exist.");
@@ -114,26 +84,17 @@ contract Twitter {
         _;
     }
 
-    modifier isUserCommentExist(bytes4 _commentId) {
-        require(
-            commentInfo[_commentId].commentId == _commentId,
-            "comment not found"
-        );
-        _;
-    }
+    // modifier isUserCommentExist(bytes4 _commentId) {
+    //     require(
+    //         commentInfo[_commentId].commentId == _commentId,
+    //         "comment not found"
+    //     );
+    //     _;
+    // }
 
-    function createPost(
-        string memory _content
-    ) public mustLoggedIn returns (bytes4) {
+    function createPost(string memory _content) public mustLoggedIn {
         bytes4 _postId = bytes4(
-            keccak256(
-                abi.encodePacked(
-                    msg.sender,
-                    _content,
-                    block.timestamp,
-                    block.gaslimit
-                )
-            )
+            keccak256(abi.encodePacked(msg.sender, _content, block.timestamp))
         );
         Post memory post = Post({
             userAddress: msg.sender,
@@ -150,34 +111,37 @@ contract Twitter {
         allPostIndex[_postId] = allPostNextIndex;
         userPostIndex[_postId] = userPostNextIndex;
         getPostInfo[_postId] = post;
-        return _postId;
     }
 
     function updatePost(
         bytes4 _postId,
         string memory _content
-    )
-        public
-        mustLoggedIn
-        isPostExist(_postId)
-        isPostOwner(_postId)
-        returns (bytes4)
-    {
+    ) public mustLoggedIn isPostExist(_postId) isPostOwner(_postId) {
         Post storage post = getPostInfo[_postId];
         post.content = _content;
         post.lastUpdated = block.timestamp;
-        return _postId;
     }
 
     function deletePost(
         bytes4 _postId
-    )
-        public
-        mustLoggedIn
-        isPostExist(_postId)
-        isPostOwner(_postId)
-        returns (bytes4)
-    {
+    ) public mustLoggedIn isPostExist(_postId) isPostOwner(_postId) {
+        // bytes4[] storage storeUserComments = userComments[_postId];
+        // if (storeUserComments.length > 0) {
+        // TODO:we update it in future.  This is a Temporary Approach.
+        //     uint256 indexComment = storeUserComments.length;
+        //     for (uint256 i = 0; i < indexComment; i++) {
+        //         bytes4 lastId = storeUserComments[storeUserComments.length-1];
+        //         if (commentsLikes[msg.sender][lastId]) {
+        //             dislikeOnComments(lastId);
+        //         }
+        //         storeUserComments.pop();
+        //     }
+        // }
+
+        if (isPostLikedByUser[msg.sender][_postId]) {
+            disLikePost(_postId);
+        }
+
         uint256 postIndex = allPostIndex[_postId];
         if (postIndex != allPosts.length - 1) {
             bytes4 lastAllPostId = allPosts[allPosts.length - 1];
@@ -185,7 +149,6 @@ contract Twitter {
             allPostIndex[lastAllPostId] = postIndex;
         }
         allPosts.pop();
-
         bytes4[] storage storeUserPosts = userPosts[msg.sender];
         uint256 index = userPostIndex[_postId];
         if (index != storeUserPosts.length - 1) {
@@ -198,7 +161,6 @@ contract Twitter {
         delete allPostIndex[_postId];
         delete userPostIndex[_postId];
         delete getPostInfo[_postId];
-        return _postId;
     }
 
     function likePost(bytes4 _postId) public mustLoggedIn isPostExist(_postId) {
@@ -225,31 +187,20 @@ contract Twitter {
         Post storage post = getPostInfo[_postId];
         post.likes -= 1;
         bytes4[] storage userAllLikes = userLikes[msg.sender];
-        // uint256 index = userLikesIndex[msg.sender][_postId];
-        // if (index != userAllLikes.length - 1) {
-        // bytes4 lastPostId = userAllLikes[userAllLikes.length - 1];
-        // userAllLikes[index] = lastPostId;
-        //     userLikesIndex[msg.sender][lastPostId] = index;
-        // }
-        uint256 index;
-        for (uint256 i = 0; i < userAllLikes.length; i++) {
-            if (userAllLikes[i] == _postId) {
-                index = i;
-                return;
-            }
-        }
+        uint256 index = userLikesIndex[msg.sender][_postId];
         if (index != userAllLikes.length - 1) {
             bytes4 lastPostId = userAllLikes[userAllLikes.length - 1];
             userAllLikes[index] = lastPostId;
+            userLikesIndex[msg.sender][lastPostId] = index;
         }
         userAllLikes.pop();
-        // delete userLikesIndex[msg.sender][_postId];
+        delete userLikesIndex[msg.sender][_postId];
     }
 
     function addComment(
         bytes4 _postId,
         string memory _comment
-    ) public mustLoggedIn isPostExist(_postId) returns (bytes4) {
+    ) public mustLoggedIn isPostExist(_postId) {
         bytes4 _commentId = bytes4(
             keccak256(
                 abi.encodePacked(msg.sender, _postId, _comment, block.timestamp)
@@ -260,17 +211,18 @@ contract Twitter {
             postId: _postId, // useful to backtrack to post if only comment is found - implement on frontend - otherwise the postId is not needed in the comment struct
             commentId: _commentId,
             comment: _comment,
-            commentTotalLike: 0
+            commentTotalLike: 0,
+            commentTime: block.timestamp
         });
         userComments[_postId].push(_commentId);
         commentInfo[_commentId] = comment;
-        return _commentId;
     }
 
     function addReply(
         bytes4 _commentId,
         string memory _reply
-    ) public mustLoggedIn isUserCommentExist(_commentId) returns (bytes4) {
+    ) public mustLoggedIn // isUserCommentExist(_commentId)
+    {
         bytes4 _postId = commentInfo[_commentId].postId;
         bytes4 replyId = bytes4(
             keccak256(
@@ -282,16 +234,17 @@ contract Twitter {
             postId: _commentId,
             commentId: replyId,
             comment: _reply,
-            commentTotalLike: 0
+            commentTotalLike: 0,
+            commentTime: block.timestamp
         });
         commentInfo[replyId] = comment;
         userComments[_commentId].push(replyId);
-        return replyId;
     }
 
     function addLikeOnComments(
         bytes4 _commentId
-    ) public mustLoggedIn isUserCommentExist(_commentId) {
+    ) public mustLoggedIn // isUserCommentExist(_commentId)
+    {
         require(!commentsLikes[msg.sender][_commentId], "You already liked it");
         commentsLikes[msg.sender][_commentId] = true;
         Comment storage comment = commentInfo[_commentId];
@@ -303,7 +256,8 @@ contract Twitter {
 
     function dislikeOnComments(
         bytes4 _commentId
-    ) public mustLoggedIn isUserCommentExist(_commentId) {
+    ) public mustLoggedIn // isUserCommentExist(_commentId)
+    {
         require(
             commentsLikes[msg.sender][_commentId] == true,
             "You already dislike it"
@@ -321,10 +275,6 @@ contract Twitter {
 
         storeLikes.pop();
         delete userCommentLikesIndex[msg.sender][_commentId];
-    }
-
-    function getUserInfo() external view returns (address, string memory) {
-        return iAuthentication.getUserInfo(msg.sender);
     }
 
     function getPostDetails(
@@ -380,7 +330,8 @@ contract Twitter {
             bytes4 postId,
             bytes4 commentId,
             string memory comment,
-            uint256 commentTotalLike
+            uint256 commentTotalLike,
+            uint256 commentTime
         )
     {
         Comment memory comments = commentInfo[_commentId];
@@ -389,7 +340,8 @@ contract Twitter {
             comments.postId,
             comments.commentId,
             comments.comment,
-            comments.commentTotalLike
+            comments.commentTotalLike,
+            comments.commentTime
         );
     }
 
@@ -416,5 +368,17 @@ contract Twitter {
     ) external view mustLoggedIn returns (bytes4[] memory) {
         return
             likeNComment ? userLikes[msg.sender] : userCommentLikes[msg.sender];
+    }
+
+    function getPostLikedByUser(
+        bytes4 _postId
+    ) external view mustLoggedIn returns (bool islike) {
+        return isPostLikedByUser[msg.sender][_postId];
+    }
+
+    function getCommentLikedByUser(
+        bytes4 _commentId
+    ) external view mustLoggedIn returns (bool isLikeComment) {
+        return commentsLikes[msg.sender][_commentId];
     }
 }

@@ -1,81 +1,253 @@
-import { Avatar, Box, Divider, IconButton, Typography } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  MenuList,
+  Popover,
+  TextField,
+  Typography,
+} from "@mui/material";
 import "../../css/AllPosts.css";
 import FavoriteOutlinedIcon from "@mui/icons-material/FavoriteOutlined";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import ModeCommentOutlinedIcon from "@mui/icons-material/ModeCommentOutlined";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import LoopOutlinedIcon from "@mui/icons-material/LoopOutlined";
-import { useState } from "react";
+import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import GifBoxOutlinedIcon from "@mui/icons-material/GifBoxOutlined";
+import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+import SentimentSatisfiedSharpIcon from "@mui/icons-material/SentimentSatisfiedSharp";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import { useEffect, useState } from "react";
 import TimeComponent from "../HomeComponents/TimeComponent";
 import { Link } from "react-router-dom";
+import { ethers } from "ethers";
 
-const UserPosts = () => {
-  const [like, setLike] = useState([
-    {
-      id: 1,
-      username: "un567",
-      time: 1718953872,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-    {
-      id: 2,
-      username: "rt12",
-      time: 1718950700,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-    {
-      id: 3,
-      username: "utero12",
-      time: 1718966284,
-      tweet:
-        "fdf sdb ss sdjl re dflsd dhfdfd dfdlfjdfjd dfdkhfjd udsc ei ewh d wl. ds sdhf hh shs sws ssfdjkf djsh reifdfd fdfh gr di sie reoas ah w cb dfdjfh lasa sdsikh ds. sdg sdsbs sdhsd sdhs sdhgd sdbssu sdsjs  sdjsd jsduwe jsiww diwebwd dsdd qqww.",
-      likeCounter: 0,
-      isLike: false,
-    },
-  ]);
+const UserPosts = ({
+  authContract,
+  twitterContract,
+  account,
+  setCountTweet,
+  userDetails,
+}) => {
+  const [userPosts, setUserPosts] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [state, setState] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
-  const handlerCounter = (index) => {
-    let newPostArray = [...like];
-    if (newPostArray[index]["isLike"]) {
-      newPostArray[index]["isLike"] = false;
-      newPostArray[index]["likeCounter"] -= 1;
-      setLike(newPostArray);
-    } else {
-      newPostArray[index]["isLike"] = true;
-      newPostArray[index]["likeCounter"] += 1;
-      setLike(newPostArray);
+  const handleOpenModal = (index, content) => {
+    setTweetModal(content);
+    setTweetModalLength(240 - content.length);
+    setSelectedIndex(index);
+    setOpenModal(true);
+  };
+  const handleCloseModal = () => setOpenModal(false);
+  const [tweetModal, setTweetModal] = useState("");
+  const [tweetModalLength, setTweetModalLength] = useState(240);
+  const [userAvatarTxt, setUserAvatarTxt] = useState("");
+
+  const handleClick = (event, index) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedIndex(index);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedIndex(null);
+  };
+
+  const open = Boolean(anchorEl);
+
+  const handlerCounter = async (index) => {
+    try {
+      let newPostArray = [...userPosts];
+      const postId = newPostArray[index].postId;
+      if (newPostArray[index]["isLike"]) {
+        newPostArray[index]["isLike"] = false;
+        newPostArray[index]["likes"] -= 1;
+        const dislikePostResponse = await twitterContract.disLikePost(postId);
+        await dislikePostResponse.wait();
+        setUserPosts(newPostArray);
+      } else {
+        newPostArray[index]["isLike"] = true;
+        newPostArray[index]["likes"] += 1;
+        const likePostResponse = await twitterContract.likePost(postId);
+        await likePostResponse.wait();
+        setUserPosts(newPostArray);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
+
+  const handleDeletePost = async (index) => {
+    try {
+      const newPostArray = [...userPosts];
+      const postId = newPostArray[index].postId;
+      const numToBytePostId = ethers.utils.hexZeroPad(
+        ethers.utils.hexlify(Number(postId)),
+        4
+      );
+      const deletePost = await twitterContract.deletePost(numToBytePostId);
+      await deletePost.wait();
+      setUserPosts(newPostArray);
+      setState(!state);
+      handleClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleTweet = (e) => {
+    const newValue = e.target.value;
+    setTweetModal(newValue);
+    setTweetModalLength(240 - newValue.length);
+  };
+
+  const updateTweet = async (event, index) => {
+    event.preventDefault();
+    try {
+      const newPostArray = [...userPosts];
+      const postId = newPostArray[index].postId;
+      const numToBytePostId = ethers.utils.hexZeroPad(
+        ethers.utils.hexlify(Number(postId)),
+        4
+      );
+      const addPost = await twitterContract.updatePost(
+        numToBytePostId,
+        tweetModal
+      );
+      await addPost.wait();
+      setUserPosts(newPostArray);
+      setState(!state);
+      setTweetModal("");
+      setTweetModalLength(240);
+      handleCloseModal();
+      handleClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    const allPosts = async () => {
+      const userPostData = await twitterContract.getUserPosts(account);
+      const newData = await Promise.all(
+        userPostData.map(async (id) => {
+          const singlePostData = await twitterContract.getPostDetails(id);
+          const userData = await authContract.getUserInfo(
+            singlePostData.userAddress
+          );
+          const isLikeByUser = await twitterContract.getPostLikedByUser(
+            singlePostData.postId
+          );
+          const postUserAddress = userData[0];
+          const postUserName = userData[1];
+          const postTime = Number(singlePostData.postTime["_hex"]);
+          const likes = Number(singlePostData.likes["_hex"]);
+          const postId = Number(singlePostData.postId);
+          const commentsLength = await twitterContract.getComments(
+            singlePostData.postId
+          );
+          return {
+            userAvatarTxt: postUserName.charAt(0),
+            postId: postId,
+            postUserAddress: postUserAddress,
+            content: singlePostData.content,
+            postTime: postTime,
+            likes: likes,
+            postUserName: postUserName,
+            isLike: isLikeByUser,
+            postCommentLength: commentsLength.length,
+          };
+        })
+      );
+      setUserPosts(newData);
+      setCountTweet(newData.length);
+      setUserAvatarTxt(userDetails.username.charAt(0));
+    };
+    twitterContract && allPosts();
+  }, [state, twitterContract]);
 
   return (
     <>
       <Box className="allPostsMainElement" component="div">
-        {like.map((item, index) => {
+        {userPosts.map((item, index) => {
           return (
-            <Box component="div" className="userPost" key={index}>
-              <Link to={`/post/${item.id}`} style={{ textDecoration: "none" }}>
-                <Box className="userDataComponent" component="div">
-                  <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                    U
-                  </Avatar>
-                  <Typography className="userTxt">@{item.username}</Typography>
-                  <Typography className="userPostTime">
-                    <TimeComponent time={item.time} />
-                  </Typography>
-                </Box>
+            <Box component="div" className="userPost" key={item.postId}>
+              <Box className="userDataComponent" component="div">
+                <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                  {item.userAvatarTxt}
+                </Avatar>
+                <Typography className="userTxt">
+                  @{item.postUserName}
+                </Typography>
+                <Typography className="userPostTime">
+                  <TimeComponent time={item.postTime} />
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
+                <IconButton
+                  edge="end"
+                  onClick={(e) => {
+                    handleClick(e, index);
+                  }}
+                  id={index}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+                <Popover
+                  id={`popover-${index}`}
+                  open={open && selectedIndex === index}
+                  anchorEl={anchorEl}
+                  onClose={handleClose}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                  sx={{ boxShadow: "0px 1px 2px #d7d7d7" }}
+                >
+                  <MenuList>
+                    <MenuItem
+                      onClick={() =>
+                        handleOpenModal(selectedIndex, item.content)
+                      }
+                    >
+                      <ListItemIcon>
+                        <ModeEditIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Edit</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={() => handleDeletePost(index)}>
+                      <ListItemIcon>
+                        <DeleteIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Delete</ListItemText>
+                    </MenuItem>
+                  </MenuList>
+                </Popover>
+              </Box>
+              <Link
+                to={`/post/1/${item.postId}`}
+                style={{ textDecoration: "none" }}
+              >
                 <Box className="userTweet">
                   <Typography
                     className="userAddTweet"
                     gutterBottom={true}
                     component="p"
                   >
-                    {item.tweet}
+                    {item.content}
                   </Typography>
                 </Box>
               </Link>
@@ -84,14 +256,14 @@ const UserPosts = () => {
                   <IconButton>
                     <ModeCommentOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>{item.postCommentLength}</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
                   <IconButton>
                     <LoopOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>0</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
@@ -107,17 +279,76 @@ const UserPosts = () => {
                       <FavoriteBorderOutlinedIcon />
                     )}
                   </IconButton>
-                  <Typography>{item.likeCounter}</Typography>
+                  <Typography>{item.likes}</Typography>
                 </Box>
 
                 <Box className="userInteractionButtons">
                   <IconButton>
                     <FileUploadOutlinedIcon />
                   </IconButton>
-                  <Typography>1</Typography>
+                  <Typography>0</Typography>
                 </Box>
               </Box>
               <Divider />
+
+              <Dialog
+                id={selectedIndex}
+                open={openModal}
+                onClose={handleCloseModal}
+                sx={{ width: "100%" }}
+              >
+                <DialogTitle>Update Post</DialogTitle>
+                <DialogContent>
+                  <form
+                    id={selectedIndex}
+                    onSubmit={(event) => updateTweet(event, selectedIndex)}
+                  >
+                    <Box className="writeTweetComponent">
+                      <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                        {userAvatarTxt}
+                      </Avatar>
+                      <TextField
+                        id={`textF=${selectedIndex}`}
+                        itemID={`textF=${selectedIndex}`}
+                        inputProps={{ maxLength: 240 }}
+                        variant="standard"
+                        InputProps={{ disableUnderline: true }}
+                        aria-label="empty textarea"
+                        autoFocus
+                        placeholder="what's Happening"
+                        className="tweetTextArea"
+                        multiline={true}
+                        value={tweetModal}
+                        onChange={(e) => handleTweet(e)}
+                      />
+                    </Box>
+                    <Box className="bottomTweetComponent">
+                      <IconButton sx={{ color: "#1da1f2" }}>
+                        <ImageOutlinedIcon />
+                      </IconButton>
+                      <IconButton sx={{ color: "#1da1f2" }}>
+                        <GifBoxOutlinedIcon />
+                      </IconButton>
+                      <IconButton sx={{ color: "#1da1f2" }}>
+                        <BarChartOutlinedIcon />
+                      </IconButton>
+                      <IconButton sx={{ color: "#1da1f2" }}>
+                        <SentimentSatisfiedSharpIcon />
+                      </IconButton>
+                      <IconButton sx={{ color: "#1da1f2" }}>
+                        <CalendarTodayOutlinedIcon />
+                      </IconButton>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <Typography sx={{ marginRight: "20px" }}>
+                        {tweetModalLength}/240
+                      </Typography>
+                      <button className="tweetCBtn" type="submit">
+                        Update
+                      </button>
+                    </Box>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </Box>
           );
         })}

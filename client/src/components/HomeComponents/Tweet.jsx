@@ -16,7 +16,7 @@ import SentimentSatisfiedSharpIcon from "@mui/icons-material/SentimentSatisfiedS
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import { useState } from "react";
 
-const Tweet = () => {
+const Tweet = ({ type }) => {
   const [tweet, setTweet] = useState("");
   const [tweetLength, setTweetLength] = useState(240);
 
@@ -89,7 +89,7 @@ const Tweet = () => {
               </IconButton>
               <Box sx={{ flexGrow: 1 }} />
               <Typography sx={{ marginRight: "20px" }}>
-                {tweetLength} Characters left
+                {tweetLength}/240
               </Typography>
               <button className="tweetCBtn" type="submit">
                 Tweet
