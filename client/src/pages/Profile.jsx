@@ -90,8 +90,6 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
                 authContract={authContract}
                 twitterContract={twitterContract}
                 account={account}
-                setCountTweet={setCountTweet}
-                userDetails={userDetails}
               />
             </TabPanel>
             <TabPanel value="3">

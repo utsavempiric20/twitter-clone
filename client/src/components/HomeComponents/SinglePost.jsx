@@ -197,6 +197,7 @@ const SinglePost = ({
           };
         })
       );
+      newData.sort((a, b) => b.commentTime - a.commentTime);
       setComments(newData);
     };
 
@@ -227,6 +228,7 @@ const SinglePost = ({
           };
         })
       );
+      newData.sort((a, b) => b.commentTime - a.commentTime);
       setComments(newData);
     };
     setIsLoading(true);

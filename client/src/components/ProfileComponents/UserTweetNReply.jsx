@@ -88,11 +88,13 @@ const UserTweetNReply = ({
           const commentsLength = await twitterContract.getComments(
             singlePostData.postId
           );
+          const comments = await fetchComments(singlePostData.postId);
           const postUserAddress = userData[0];
           const postUserName = userData[1];
           const postTime = Number(singlePostData.postTime["_hex"]);
           const likes = Number(singlePostData.likes["_hex"]);
           const postId = Number(singlePostData.postId);
+
           return {
             userAvatarTxt: postUserName.charAt(0),
             postId: postId,
@@ -103,18 +105,19 @@ const UserTweetNReply = ({
             postUserName: postUserName,
             isLike: isLikeByUser,
             postCommentLength: commentsLength.length,
+            comments: comments,
           };
         })
       );
-
+      tweetData.sort((a, b) => b.postTime - a.postTime);
       setTweets(tweetData);
-      tweetData.forEach((tweet) => {
-        const numToByte = ethers.utils.hexZeroPad(
-          ethers.utils.hexlify(Number(tweet.postId)),
-          4
-        );
-        fetchComments(numToByte);
-      });
+      // tweetData.forEach((tweet) => {
+      //   const numToByte = ethers.utils.hexZeroPad(
+      //     ethers.utils.hexlify(Number(tweet.postId)),
+      //     4
+      //   );
+      //   fetchComments(numToByte);
+      // });
     };
 
     const fetchComments = async (tweetId) => {
@@ -127,6 +130,7 @@ const UserTweetNReply = ({
           const commentsLength = await twitterContract.getReplyOnCommment(
             singleComment.commentId
           );
+          const replies = await fetchReplies(singleComment.commentId);
           return {
             commentAvatarTxt: userData[1].charAt(0),
             user: singleComment.user,
@@ -138,18 +142,20 @@ const UserTweetNReply = ({
             isLikeComment: isLikeComment,
             commentTime: singleComment.commentTime,
             postCommentLength: commentsLength.length,
+            replies: replies,
           };
         })
       );
-      setComments(commentData);
-
-      commentData.forEach((comment) => {
-        const numToByte = ethers.utils.hexZeroPad(
-          ethers.utils.hexlify(Number(comment.commentId)),
-          4
-        );
-        fetchReplies(numToByte);
-      });
+      commentData.sort((a, b) => b.commentTime - a.commentTime);
+      return commentData;
+      // setComments(commentData);
+      // commentData.forEach((comment) => {
+      //   const numToByte = ethers.utils.hexZeroPad(
+      //     ethers.utils.hexlify(Number(comment.commentId)),
+      //     4
+      //   );
+      //   fetchReplies(numToByte);
+      // });
     };
 
     const fetchReplies = async (commentId) => {
@@ -162,7 +168,7 @@ const UserTweetNReply = ({
           const commentsLength = await twitterContract.getReplyOnCommment(
             singleComment.commentId
           );
-
+          const replies = await fetchReplies(singleComment.commentId);
           return {
             commentAvatarTxt: userData[1].charAt(0),
             user: singleComment.user,
@@ -174,86 +180,245 @@ const UserTweetNReply = ({
             isLikeComment: isLikeComment,
             commentTime: singleComment.commentTime,
             postCommentLength: commentsLength.length,
+            replies: replies,
           };
         })
       );
-      setReplies(replyData);
+      replyData.sort((a, b) => b.commentTime - a.commentTime);
+      return replyData;
+      // setReplies(replyData);
+      // replyData.forEach((comment) => {
+      //   const numToByte = ethers.utils.hexZeroPad(
+      //     ethers.utils.hexlify(Number(comment.commentId)),
+      //     4
+      //   );
+      //   fetchReplies(numToByte);
+      // });
     };
 
-    fetchTweets();
+    twitterContract && fetchTweets();
   }, []);
   return (
     <>
       <Box>
         {tweets.map((item, index) => {
+          console.log(item);
           return (
-            <Box component="div" className="userPost" key={index}>
-              <Link
-                to={`/post/1/${item.postId}`}
-                style={{ textDecoration: "none" }}
-              >
-                <Box className="userDataComponent" component="div">
-                  <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                    {item.userAvatarTxt}
-                  </Avatar>
-                  <Typography className="userTxt">
-                    @{item.postUserName}
-                  </Typography>
-                  <Typography className="userPostTime">
-                    <TimeComponent time={item.postTime} />
-                  </Typography>
+            <Box>
+              <Box component="div" className="userPost" key={index}>
+                <Link
+                  to={`/post/1/${item.postId}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <Box className="userDataComponent" component="div">
+                    <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                      {item.userAvatarTxt}
+                    </Avatar>
+                    <Typography className="userTxt">
+                      @{item.postUserName}
+                    </Typography>
+                    <Typography className="userPostTime">
+                      <TimeComponent time={item.postTime} />
+                    </Typography>
+                  </Box>
+                  <Box className="userTweet">
+                    <Typography
+                      className="userAddTweet"
+                      gutterBottom={true}
+                      component="p"
+                    >
+                      {item.content}
+                    </Typography>
+                  </Box>
+                </Link>
+                <Box className="userBottomIcons">
+                  <Box className="userInteractionButtons">
+                    <IconButton>
+                      <ModeCommentOutlinedIcon />
+                    </IconButton>
+                    <Typography>{item.postCommentLength}</Typography>
+                  </Box>
+                  <Box className="userInteractionButtons">
+                    <IconButton>
+                      <LoopOutlinedIcon />
+                    </IconButton>
+                    <Typography>0</Typography>
+                  </Box>
+                  <Box className="userInteractionButtons">
+                    <IconButton
+                      onClick={() => {
+                        handlerCounter(index);
+                      }}
+                      sx={{ color: item.isLike ? "#F4245E" : "gray" }}
+                    >
+                      {item.isLike ? (
+                        <FavoriteOutlinedIcon />
+                      ) : (
+                        <FavoriteBorderOutlinedIcon />
+                      )}
+                    </IconButton>
+                    <Typography>{item.likes}</Typography>
+                  </Box>
+                  <Box className="userInteractionButtons">
+                    <IconButton>
+                      <FileUploadOutlinedIcon />
+                    </IconButton>
+                    <Typography>0</Typography>
+                  </Box>
                 </Box>
-                <Box className="userTweet">
-                  <Typography
-                    className="userAddTweet"
-                    gutterBottom={true}
-                    component="p"
-                  >
-                    {item.content}
-                  </Typography>
-                </Box>
-              </Link>
-              <Box className="userBottomIcons">
-                <Box className="userInteractionButtons">
-                  <IconButton>
-                    <ModeCommentOutlinedIcon />
-                  </IconButton>
-                  <Typography>{item.postCommentLength}</Typography>
-                </Box>
-                <Box className="userInteractionButtons">
-                  <IconButton>
-                    <LoopOutlinedIcon />
-                  </IconButton>
-                  <Typography>0</Typography>
-                </Box>
-                <Box className="userInteractionButtons">
-                  <IconButton
-                    onClick={() => {
-                      handlerCounter(index);
-                    }}
-                    sx={{ color: item.isLike ? "#F4245E" : "gray" }}
-                  >
-                    {item.isLike ? (
-                      <FavoriteOutlinedIcon />
-                    ) : (
-                      <FavoriteBorderOutlinedIcon />
-                    )}
-                  </IconButton>
-                  <Typography>{item.likes}</Typography>
-                </Box>
-                <Box className="userInteractionButtons">
-                  <IconButton>
-                    <FileUploadOutlinedIcon />
-                  </IconButton>
-                  <Typography>0</Typography>
-                </Box>
+                <Divider />
               </Box>
-              <Divider />
+              {item.comments.map((item, index) => {
+                return (
+                  <Box>
+                    <Box component="div" className="userPost" key={index}>
+                      <Link
+                        to={`/post/2/${item.commentId}`}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <Box className="userDataComponent" component="div">
+                          <Avatar
+                            sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}
+                          >
+                            {item.commentAvatarTxt}
+                          </Avatar>
+                          <Typography className="userTxt">
+                            @{item.postUserName}
+                          </Typography>
+                          <Typography className="userPostTime">
+                            <TimeComponent time={item.commentTime} />
+                          </Typography>
+                        </Box>
+                        <Box className="userTweet">
+                          <Typography
+                            className="userAddTweet"
+                            gutterBottom={true}
+                            component="p"
+                          >
+                            {item.comment}
+                          </Typography>
+                        </Box>
+                      </Link>
+                      <Box className="userBottomIcons">
+                        <Box className="userInteractionButtons">
+                          <IconButton>
+                            <ModeCommentOutlinedIcon />
+                          </IconButton>
+                          <Typography>{item.postCommentLength}</Typography>
+                        </Box>
+                        <Box className="userInteractionButtons">
+                          <IconButton>
+                            <LoopOutlinedIcon />
+                          </IconButton>
+                          <Typography>0</Typography>
+                        </Box>
+                        <Box className="userInteractionButtons">
+                          <IconButton
+                            onClick={() => {
+                              handleCommentCounter(index, 1);
+                            }}
+                            sx={{
+                              color: item.isLikeComment ? "#F4245E" : "gray",
+                            }}
+                          >
+                            {item.isLikeComment ? (
+                              <FavoriteOutlinedIcon />
+                            ) : (
+                              <FavoriteBorderOutlinedIcon />
+                            )}
+                          </IconButton>
+                          <Typography>{item.commentTotalLike}</Typography>
+                        </Box>
+                        <Box className="userInteractionButtons">
+                          <IconButton>
+                            <FileUploadOutlinedIcon />
+                          </IconButton>
+                          <Typography>0</Typography>
+                        </Box>
+                      </Box>
+                      <Divider />
+                    </Box>
+                    {item.replies.map((item, index) => {
+                      return (
+                        <Box component="div" className="userPost" key={index}>
+                          <Link
+                            to={`/post/2/${item.commentId}`}
+                            style={{ textDecoration: "none" }}
+                          >
+                            <Box className="userDataComponent" component="div">
+                              <Avatar
+                                sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}
+                              >
+                                {item.commentAvatarTxt}
+                              </Avatar>
+                              <Typography className="userTxt">
+                                @{item.postUserName}
+                              </Typography>
+                              <Typography className="userPostTime">
+                                <TimeComponent time={item.commentTime} />
+                              </Typography>
+                            </Box>
+                            <Box className="userTweet">
+                              <Typography
+                                className="userAddTweet"
+                                gutterBottom={true}
+                                component="p"
+                              >
+                                {item.comment}
+                              </Typography>
+                            </Box>
+                          </Link>
+                          <Box className="userBottomIcons">
+                            <Box className="userInteractionButtons">
+                              <IconButton>
+                                <ModeCommentOutlinedIcon />
+                              </IconButton>
+                              <Typography>{item.postCommentLength}</Typography>
+                            </Box>
+                            <Box className="userInteractionButtons">
+                              <IconButton>
+                                <LoopOutlinedIcon />
+                              </IconButton>
+                              <Typography>0</Typography>
+                            </Box>
+                            <Box className="userInteractionButtons">
+                              <IconButton
+                                onClick={() => {
+                                  handleCommentCounter(index, 2);
+                                }}
+                                sx={{
+                                  color: item.isLikeComment
+                                    ? "#F4245E"
+                                    : "gray",
+                                }}
+                              >
+                                {item.isLikeComment ? (
+                                  <FavoriteOutlinedIcon />
+                                ) : (
+                                  <FavoriteBorderOutlinedIcon />
+                                )}
+                              </IconButton>
+                              <Typography>{item.commentTotalLike}</Typography>
+                            </Box>
+                            <Box className="userInteractionButtons">
+                              <IconButton>
+                                <FileUploadOutlinedIcon />
+                              </IconButton>
+                              <Typography>0</Typography>
+                            </Box>
+                          </Box>
+                          <Divider />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                );
+              })}
             </Box>
           );
         })}
       </Box>
-      <Box>
+      {/* <Box>
         {comments.map((item, index) => {
           return (
             <Box component="div" className="userPost" key={index}>
@@ -390,9 +555,7 @@ const UserTweetNReply = ({
             </Box>
           );
         })}
-      </Box>
-      {console.log("comments", comments)}
-      {console.log("replies", replies)}
+      </Box> */}
     </>
   );
 };

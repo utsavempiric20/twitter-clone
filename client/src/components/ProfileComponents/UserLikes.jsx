@@ -68,6 +68,7 @@ const UserLikes = ({ authContract, twitterContract, account }) => {
           };
         })
       );
+      newData.sort((a, b) => b.postTime - a.postTime);
       setUserLikePosts(newData);
     };
     twitterContract && allPosts();

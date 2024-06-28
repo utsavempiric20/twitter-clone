@@ -23,6 +23,7 @@ import TimeComponent from "../components/HomeComponents/TimeComponent";
 
 const Home = (props) => {
   let { userDetails, authContract, twitterContract } = props;
+  const [loading, setLoading] = useState(false);
 
   const [tweet, setTweet] = useState("");
   const [tweetLength, setTweetLength] = useState(240);
@@ -61,7 +62,6 @@ const Home = (props) => {
   const addTweet = async (event) => {
     event.preventDefault();
     try {
-      // setPost([...post, { tweet: tweet }]);
       const addPost = await twitterContract.createPost(tweet);
       await addPost.wait();
       setTweet("");
@@ -105,153 +105,160 @@ const Home = (props) => {
           };
         })
       );
+      newData.sort((a, b) => b.postTime - a.postTime);
       setPost(newData);
       setUserAvatarTweetTxt(userDetails.username.charAt(0));
     };
+    setLoading(true);
     twitterContract && allPosts();
+    setLoading(false);
   }, [state, twitterContract]);
 
   return (
     <>
-      <Box component="main" sx={{ width: "70%", p: 0 }}>
-        <Box component="div" className="tweetComponent">
-          <Box className="tweetComponentHeader" component="div">
-            <Typography
-              sx={{
-                fontWeight: "700",
-                fontSize: "18px",
-              }}
-            >
-              Home
-            </Typography>
-            <Box sx={{ flexGrow: 1 }} />
-            <IconButton sx={{ color: "#1da1f2" }}>
-              <AutoAwesomeOutlinedIcon />
-            </IconButton>
-          </Box>
+      {loading ? (
+        <></>
+      ) : (
+        <Box component="main" sx={{ width: "70%", p: 0 }}>
+          <Box component="div" className="tweetComponent">
+            <Box className="tweetComponentHeader" component="div">
+              <Typography
+                sx={{
+                  fontWeight: "700",
+                  fontSize: "18px",
+                }}
+              >
+                Home
+              </Typography>
+              <Box sx={{ flexGrow: 1 }} />
+              <IconButton sx={{ color: "#1da1f2" }}>
+                <AutoAwesomeOutlinedIcon />
+              </IconButton>
+            </Box>
 
-          <Divider color="#F7F9FA" />
+            <Divider color="#F7F9FA" />
 
-          <Box className="addTweetComponent">
-            <form onSubmit={addTweet}>
-              <Box className="writeTweetComponent">
-                <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                  {userAvatarTweetTxt}
-                </Avatar>
-                <TextField
-                  inputProps={{ maxLength: 240 }}
-                  variant="standard"
-                  InputProps={{ disableUnderline: true }}
-                  aria-label="empty textarea"
-                  autoFocus
-                  placeholder="What's Happening"
-                  className="tweetTextArea"
-                  multiline={true}
-                  value={tweet}
-                  onChange={(e) => handleTweet(e)}
-                />
-              </Box>
-              <Box className="bottomTweetComponent">
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <ImageOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <GifBoxOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <BarChartOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <SentimentSatisfiedSharpIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <CalendarTodayOutlinedIcon />
-                </IconButton>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography sx={{ marginRight: "20px" }}>
-                  {tweetLength}/240
-                </Typography>
-                <button className="tweetCBtn" type="submit">
-                  Tweet
-                </button>
-              </Box>
-            </form>
-          </Box>
-        </Box>
-        <Box
-          className="allPostsMainElement"
-          component="div"
-          sx={{ marginTop: "10px" }}
-        >
-          {post.map((item, index) => {
-            return (
-              <Box component="div" className="userPost" key={index}>
-                <Link
-                  to={`/post/1/${item.postId}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <Box className="userDataComponent" component="div">
-                    <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                      {item.userAvatarTxt}
-                    </Avatar>
-                    <Typography className="userTxt">
-                      @{item.postUserName}
-                    </Typography>
-                    <Typography className="userPostTime">
-                      <TimeComponent time={item.postTime} />
-                    </Typography>
-                  </Box>
-                  <Box className="userTweet">
-                    <Typography
-                      className="userAddTweet"
-                      gutterBottom={true}
-                      component="p"
-                    >
-                      {item.content}
-                    </Typography>
-                  </Box>
-                </Link>
-                <Box className="userBottomIcons">
-                  <Box className="userInteractionButtons">
-                    <IconButton>
-                      <ModeCommentOutlinedIcon />
-                    </IconButton>
-                    <Typography>{item.postCommentLength}</Typography>
-                  </Box>
-                  <Box className="userInteractionButtons">
-                    <IconButton>
-                      <LoopOutlinedIcon />
-                    </IconButton>
-                    <Typography>0</Typography>
-                  </Box>
-                  <Box className="userInteractionButtons">
-                    <IconButton
-                      onClick={() => {
-                        handlerCounter(index);
-                      }}
-                      sx={{ color: item.isLike ? "#F4245E" : "gray" }}
-                    >
-                      {item.isLike ? (
-                        <FavoriteOutlinedIcon />
-                      ) : (
-                        <FavoriteBorderOutlinedIcon />
-                      )}
-                    </IconButton>
-                    <Typography>{item.likes}</Typography>
-                  </Box>
-                  <Box className="userInteractionButtons">
-                    <IconButton>
-                      <FileUploadOutlinedIcon />
-                    </IconButton>
-                    <Typography>0</Typography>
-                  </Box>
+            <Box className="addTweetComponent">
+              <form onSubmit={addTweet}>
+                <Box className="writeTweetComponent">
+                  <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                    {userAvatarTweetTxt}
+                  </Avatar>
+                  <TextField
+                    inputProps={{ maxLength: 240 }}
+                    variant="standard"
+                    InputProps={{ disableUnderline: true }}
+                    aria-label="empty textarea"
+                    autoFocus
+                    placeholder="What's Happening"
+                    className="tweetTextArea"
+                    multiline={true}
+                    value={tweet}
+                    onChange={(e) => handleTweet(e)}
+                  />
                 </Box>
-                <Divider />
-              </Box>
-            );
-          })}
+                <Box className="bottomTweetComponent">
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <ImageOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <GifBoxOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <BarChartOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <SentimentSatisfiedSharpIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <CalendarTodayOutlinedIcon />
+                  </IconButton>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Typography sx={{ marginRight: "20px" }}>
+                    {tweetLength}/240
+                  </Typography>
+                  <button className="tweetCBtn" type="submit">
+                    Tweet
+                  </button>
+                </Box>
+              </form>
+            </Box>
+          </Box>
+          <Box
+            className="allPostsMainElement"
+            component="div"
+            sx={{ marginTop: "10px" }}
+          >
+            {post.map((item, index) => {
+              return (
+                <Box component="div" className="userPost" key={index}>
+                  <Link
+                    to={`/post/1/${item.postId}`}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Box className="userDataComponent" component="div">
+                      <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                        {item.userAvatarTxt}
+                      </Avatar>
+                      <Typography className="userTxt">
+                        @{item.postUserName}
+                      </Typography>
+                      <Typography className="userPostTime">
+                        <TimeComponent time={item.postTime} />
+                      </Typography>
+                    </Box>
+                    <Box className="userTweet">
+                      <Typography
+                        className="userAddTweet"
+                        gutterBottom={true}
+                        component="p"
+                      >
+                        {item.content}
+                      </Typography>
+                    </Box>
+                  </Link>
+                  <Box className="userBottomIcons">
+                    <Box className="userInteractionButtons">
+                      <IconButton>
+                        <ModeCommentOutlinedIcon />
+                      </IconButton>
+                      <Typography>{item.postCommentLength}</Typography>
+                    </Box>
+                    <Box className="userInteractionButtons">
+                      <IconButton>
+                        <LoopOutlinedIcon />
+                      </IconButton>
+                      <Typography>0</Typography>
+                    </Box>
+                    <Box className="userInteractionButtons">
+                      <IconButton
+                        onClick={() => {
+                          handlerCounter(index);
+                        }}
+                        sx={{ color: item.isLike ? "#F4245E" : "gray" }}
+                      >
+                        {item.isLike ? (
+                          <FavoriteOutlinedIcon />
+                        ) : (
+                          <FavoriteBorderOutlinedIcon />
+                        )}
+                      </IconButton>
+                      <Typography>{item.likes}</Typography>
+                    </Box>
+                    <Box className="userInteractionButtons">
+                      <IconButton>
+                        <FileUploadOutlinedIcon />
+                      </IconButton>
+                      <Typography>0</Typography>
+                    </Box>
+                  </Box>
+                  <Divider />
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
-      </Box>
+      )}
     </>
   );
 };

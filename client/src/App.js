@@ -21,9 +21,9 @@ function App() {
 
   useEffect(() => {
     const connectWallet = async () => {
-      const authContractAddress = "0x05Aa229Aec102f78CE0E852A812a388F076Aa555";
+      const authContractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
       const twitterContractAddress =
-        "0x0b48aF34f4c854F5ae1A3D587da471FeA45bAD52";
+        "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
       const authContractAbi = authAbi.abi;
       const twitterContractAbi = twitterAbi.abi;
       try {

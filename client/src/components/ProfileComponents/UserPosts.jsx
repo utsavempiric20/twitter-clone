@@ -173,6 +173,7 @@ const UserPosts = ({
           };
         })
       );
+      // newData.sort((a, b) => b.postTime - a.postTime);
       setUserPosts(newData);
       setCountTweet(newData.length);
       setUserAvatarTxt(userDetails.username.charAt(0));

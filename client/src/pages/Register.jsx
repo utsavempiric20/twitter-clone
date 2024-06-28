@@ -51,6 +51,9 @@ const Register = ({ authContract, account }) => {
         registerInfo.username,
         account
       );
+      console.log("register ", account);
+      const getUserInfo = await authContract.getUserInfo(account);
+      console.log(getUserInfo);
       console.log("response", response);
       await response.wait();
       console.log("register successfully");

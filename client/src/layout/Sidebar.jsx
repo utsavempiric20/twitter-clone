@@ -77,6 +77,7 @@ const SideBar = (props) => {
   const [tweetModalLength, setTweetModalLength] = useState(240);
   const [userLogOutAlert, setUserLogOutAlert] = useState(false);
   const [userAvatarTxt, setUserAvatarTxt] = useState("");
+  const [loading, setLoading] = useState(false);
   const handleUserLogOutAlert = () => {
     setUserLogOutAlert(true);
     setTimeout(() => {
@@ -120,129 +121,138 @@ const SideBar = (props) => {
     }
   };
   useEffect(() => {
+    setLoading(true);
     const userData = JSON.parse(localStorage.getItem("userInfo"));
     setUserDetails({
       username: userData.username,
       registerTime: userData.registerTime,
     });
     setUserAvatarTxt(userData.username.charAt(0));
+    setLoading(false);
   }, [twitterContract, authContract]);
 
   return (
     <>
-      <Box
-        className="sideMain"
-        sx={{
-          overflow: "auto",
-          width: "30%",
-          height: "100vh",
-          borderRight: "2px solid #F7F9FA",
-        }}
-      >
-        <List>
-          {IconList.map((item, index) => (
-            <ListItem key={index}>
-              <Link to={item["to"]} style={{ textDecoration: "none" }}>
+      {loading ? (
+        <></>
+      ) : (
+        <Box
+          className="sideMain"
+          sx={{
+            overflow: "auto",
+            width: "30%",
+            height: "100vh",
+            borderRight: "2px solid #F7F9FA",
+          }}
+        >
+          <List>
+            {IconList.map((item, index) => (
+              <ListItem key={index}>
+                <Link to={item["to"]} style={{ textDecoration: "none" }}>
+                  <ListItemButton>
+                    <ListItemIcon>{item["icon"]}</ListItemIcon>
+                    <ListItemText
+                      className="listItemTxt"
+                      primary={item["text"]}
+                    />
+                  </ListItemButton>
+                </Link>
+              </ListItem>
+            ))}
+          </List>
+          <Divider />
+          <button className="tweetBtn" onClick={handleOpen}>
+            Tweet
+          </button>
+          <List>
+            <ListItem
+              style={{ bottom: 0 }}
+              secondaryAction={
+                <IconButton edge="end" onClick={handleLogOut}>
+                  <MoreHorizOutlinedIcon />
+                </IconButton>
+              }
+            >
+              <Link to="/profile" style={{ textDecoration: "none" }}>
                 <ListItemButton>
-                  <ListItemIcon>{item["icon"]}</ListItemIcon>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: blue[500] }}>{userAvatarTxt}</Avatar>
+                  </ListItemAvatar>
                   <ListItemText
-                    className="listItemTxt"
-                    primary={item["text"]}
+                    primary={
+                      <Typography sx={{ color: "#0F1419", fontWeight: 700 }}>
+                        @{userDetails.username}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography sx={{ color: "#5B7083", fontWeight: 500 }}>
+                        {
+                          months[
+                            new Date(userDetails.registerTime * 1000).getMonth()
+                          ]
+                        }{" "}
+                        {new Date(
+                          userDetails.registerTime * 1000
+                        ).getFullYear()}
+                      </Typography>
+                    }
                   />
                 </ListItemButton>
               </Link>
             </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <button className="tweetBtn" onClick={handleOpen}>
-          Tweet
-        </button>
-        <List>
-          <ListItem
-            style={{ bottom: 0 }}
-            secondaryAction={
-              <IconButton edge="end" onClick={handleLogOut}>
-                <MoreHorizOutlinedIcon />
-              </IconButton>
-            }
-          >
-            <Link to="/profile" style={{ textDecoration: "none" }}>
-              <ListItemButton>
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: blue[500] }}>{userAvatarTxt}</Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Typography sx={{ color: "#0F1419", fontWeight: 700 }}>
-                      @{userDetails.username}
-                    </Typography>
-                  }
-                  secondary={
-                    <Typography sx={{ color: "#5B7083", fontWeight: 500 }}>
-                      {
-                        months[
-                          new Date(userDetails.registerTime * 1000).getMonth()
-                        ]
-                      }{" "}
-                      {new Date(userDetails.registerTime * 1000).getFullYear()}
-                    </Typography>
-                  }
-                />
-              </ListItemButton>
-            </Link>
-          </ListItem>
-        </List>
+          </List>
 
-        <Dialog open={open} onClose={handleClose} sx={{ width: "100%" }}>
-          <DialogTitle>Add Post</DialogTitle>
-          <DialogContent>
-            <form onSubmit={(event) => addTweet(event)}>
-              <Box className="writeTweetComponent">
-                <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
-                  {userAvatarTxt}
-                </Avatar>
-                <TextField
-                  inputProps={{ maxLength: 240 }}
-                  variant="standard"
-                  InputProps={{ disableUnderline: true }}
-                  aria-label="empty textarea"
-                  autoFocus
-                  placeholder="What's Happening"
-                  className="tweetTextArea"
-                  multiline={true}
-                  value={tweetModal}
-                  onChange={(e) => handleTweet(e)}
-                />
-              </Box>
-              <Box className="bottomTweetComponent">
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <ImageOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <GifBoxOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <BarChartOutlinedIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <SentimentSatisfiedSharpIcon />
-                </IconButton>
-                <IconButton sx={{ color: "#1da1f2" }}>
-                  <CalendarTodayOutlinedIcon />
-                </IconButton>
-                <Box sx={{ flexGrow: 1 }} />
-                <Typography sx={{ marginRight: "20px" }}>
-                  {tweetModalLength}/240
-                </Typography>
-                <button className="tweetCBtn" type="submit">
-                  Tweet
-                </button>
-              </Box>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </Box>
+          <Dialog open={open} onClose={handleClose} sx={{ width: "100%" }}>
+            <DialogTitle>Add Post</DialogTitle>
+            <DialogContent>
+              <form onSubmit={(event) => addTweet(event)}>
+                <Box className="writeTweetComponent">
+                  <Avatar sx={{ bgcolor: "#1da1f2", marginRight: "10px" }}>
+                    {userAvatarTxt}
+                  </Avatar>
+                  <TextField
+                    inputProps={{ maxLength: 240 }}
+                    variant="standard"
+                    InputProps={{ disableUnderline: true }}
+                    aria-label="empty textarea"
+                    autoFocus
+                    placeholder="What's Happening"
+                    className="tweetTextArea"
+                    multiline={true}
+                    value={tweetModal}
+                    onChange={(e) => handleTweet(e)}
+                  />
+                </Box>
+                <Box className="bottomTweetComponent">
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <ImageOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <GifBoxOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <BarChartOutlinedIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <SentimentSatisfiedSharpIcon />
+                  </IconButton>
+                  <IconButton sx={{ color: "#1da1f2" }}>
+                    <CalendarTodayOutlinedIcon />
+                  </IconButton>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Typography sx={{ marginRight: "20px" }}>
+                    {tweetModalLength}/240
+                  </Typography>
+                  <button className="tweetCBtn" type="submit">
+                    Tweet
+                  </button>
+                </Box>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </Box>
+      )}
+
       {userLogOutAlert && <AlertComponent message={"User Is not logged In"} />}
     </>
   );
