@@ -150,7 +150,7 @@ const SinglePost = ({
       const isLikeByUser = await twitterContract.getCommentLikedByUser(
         singlePostData.commentId
       );
-      const commentsLength = await twitterContract.getReplyOnCommment(
+      const commentsLength = await twitterContract.getReplyOnComment(
         singlePostData.commentId
       );
       const postUserAddress = userData[0];
@@ -180,7 +180,7 @@ const SinglePost = ({
           const isLikeComment = await twitterContract.getCommentLikedByUser(
             commentId
           );
-          const commentsLength = await twitterContract.getReplyOnCommment(
+          const commentsLength = await twitterContract.getReplyOnComment(
             singleComment.commentId
           );
           return {
@@ -202,7 +202,7 @@ const SinglePost = ({
     };
 
     const fetchCommentReply = async () => {
-      const commentsData = await twitterContract.getReplyOnCommment(numToByte);
+      const commentsData = await twitterContract.getReplyOnComment(numToByte);
       const newData = await Promise.all(
         commentsData.map(async (commentId) => {
           const singleComment = await twitterContract.getCommentInfo(commentId);
@@ -210,7 +210,7 @@ const SinglePost = ({
           const isLikeComment = await twitterContract.getCommentLikedByUser(
             commentId
           );
-          const commentsLength = await twitterContract.getReplyOnCommment(
+          const commentsLength = await twitterContract.getReplyOnComment(
             singleComment.commentId
           );
 

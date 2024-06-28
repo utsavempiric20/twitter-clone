@@ -70,6 +70,11 @@ const SideBar = (props) => {
     "November",
     "December",
   ];
+
+  //   const date = new Date(2009, 10, 10);  // 2009-11-10
+  // const month = date.toLocaleString('default', { month: 'long' });
+  // console.log(month);
+
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);

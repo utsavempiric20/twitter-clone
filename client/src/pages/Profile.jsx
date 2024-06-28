@@ -54,8 +54,9 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
           </Typography>
           <Typography className="tweetCount">
             Joined{" "}
-            {months[new Date(userDetails.registerTime * 1000).getMonth()]}{" "}
-            {new Date(userDetails.registerTime * 1000).getFullYear()}
+            {/* {months[new Date(userDetails.registerTime * 1000).getMonth()]}{" "}
+            {new Date(userDetails.registerTime * 1000).getFullYear()} */}
+            {new Date(userDetails.registerTime * 1000).toDateString()}
           </Typography>
         </Box>
         <Box className="tabComponent">

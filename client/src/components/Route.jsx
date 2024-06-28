@@ -6,13 +6,15 @@ import SideBar from "../layout/Sidebar";
 import SinglePost from "./HomeComponents/SinglePost";
 import Home from "../pages/Home";
 
-const MyRoutes = ({
-  authContract,
-  twitterContract,
-  account,
-  userDetails,
-  setUserDetails,
-}) => {
+const MyRoutes = (props) => {
+  const {
+    authContract,
+    twitterContract,
+    account,
+    userDetails,
+    setUserDetails,
+  } = props;
+
   let location = useLocation();
   return (
     <div style={{ display: "flex", width: "60%", margin: "auto" }}>

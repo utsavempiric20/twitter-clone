@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "hardhat/console.sol";
-
 interface IAuthentication {
     function register(string memory _userName, address caller) external;
 
@@ -59,6 +57,7 @@ contract Twitter {
     mapping(bytes4 => uint256) userPostIndex;
     mapping(address => mapping(bytes4 => uint256)) userLikesIndex;
     mapping(address => mapping(bytes4 => uint256)) userCommentLikesIndex;
+    mapping(address => bytes4[]) userReplies;
 
     constructor(address _iAuthentication) {
         iAuthentication = IAuthentication(_iAuthentication);
@@ -216,6 +215,7 @@ contract Twitter {
         });
         userComments[_postId].push(_commentId);
         commentInfo[_commentId] = comment;
+        userReplies[msg.sender].push(_commentId);
     }
 
     function addReply(
@@ -239,6 +239,7 @@ contract Twitter {
         });
         commentInfo[replyId] = comment;
         userComments[_commentId].push(replyId);
+        userReplies[msg.sender].push(replyId);
     }
 
     function addLikeOnComments(
@@ -304,12 +305,7 @@ contract Twitter {
         );
     }
 
-    function getAllPosts()
-        external
-        view
-        mustLoggedIn
-        returns (bytes4[] memory)
-    {
+    function getAllPosts() external view returns (bytes4[] memory) {
         return allPosts;
     }
 
@@ -357,7 +353,7 @@ contract Twitter {
         return userComments[_postId];
     }
 
-    function getReplyOnCommment(
+    function getReplyOnComment(
         bytes4 _commentId
     ) external view mustLoggedIn returns (bytes4[] memory) {
         return userComments[_commentId];
@@ -380,5 +376,14 @@ contract Twitter {
         bytes4 _commentId
     ) external view mustLoggedIn returns (bool isLikeComment) {
         return commentsLikes[msg.sender][_commentId];
+    }
+
+    function getUserReplies()
+        external
+        view
+        mustLoggedIn
+        returns (bytes4[] memory)
+    {
+        return userReplies[msg.sender];
     }
 }

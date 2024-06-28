@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AlertComponent from "../components/AlertComponent";
 
 const Login = ({ authContract, account, userDetails, setUserDetails }) => {
-  console.log("login", account);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
   const [loginInfo, setLoginInfo] = useState({
@@ -38,7 +37,7 @@ const Login = ({ authContract, account, userDetails, setUserDetails }) => {
       const timeToHex = getUserInfo[2];
       const registerTime = Number(timeToHex["_hex"]);
       const userObj = { username, registerTime };
-      // setUserDetails({ username: username, registerTime: registerTime });
+      console.log("userDetails", userDetails);
       localStorage.setItem("userInfo", JSON.stringify(userObj));
       navigate("/home", { replace: true });
       setLoginInfo({ username: "", password: "" });

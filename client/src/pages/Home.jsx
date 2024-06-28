@@ -22,7 +22,7 @@ import { Link } from "react-router-dom";
 import TimeComponent from "../components/HomeComponents/TimeComponent";
 
 const Home = (props) => {
-  let { userDetails, authContract, twitterContract } = props;
+  const { userDetails, authContract, twitterContract } = props;
   const [loading, setLoading] = useState(false);
 
   const [tweet, setTweet] = useState("");
@@ -117,7 +117,7 @@ const Home = (props) => {
   return (
     <>
       {loading ? (
-        <></>
+        <>Loading data...</>
       ) : (
         <Box component="main" sx={{ width: "70%", p: 0 }}>
           <Box component="div" className="tweetComponent">

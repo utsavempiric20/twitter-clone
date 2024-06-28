@@ -35,7 +35,8 @@ const Register = ({ authContract, account }) => {
   };
 
   const handleChange = (e) => {
-    setRegisterInfo({ ...registerInfo, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setRegisterInfo({ ...registerInfo, [name]: value });
   };
 
   const registerSubmit = async (event) => {
