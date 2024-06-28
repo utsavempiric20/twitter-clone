@@ -33,18 +33,20 @@ import TimeComponent from "../HomeComponents/TimeComponent";
 import { Link } from "react-router-dom";
 import { ethers } from "ethers";
 
-const UserPosts = ({
-  authContract,
-  twitterContract,
-  account,
-  setCountTweet,
-  userDetails,
-}) => {
+const UserPosts = (props) => {
+  const { authContract, twitterContract, account, userDetails } = props;
   const [userPosts, setUserPosts] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const [state, setState] = useState(false);
+  const [data, setData] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const TweetIconList = [
+    { iconName: <ImageOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <GifBoxOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <BarChartOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <SentimentSatisfiedSharpIcon />, color: "#1da1f2" },
+    { iconName: <CalendarTodayOutlinedIcon />, color: "#1da1f2" },
+  ];
 
   const handleOpenModal = (index, content) => {
     setTweetModal(content);
@@ -102,7 +104,7 @@ const UserPosts = ({
       const deletePost = await twitterContract.deletePost(numToBytePostId);
       await deletePost.wait();
       setUserPosts(newPostArray);
-      setState(!state);
+      setData(!data);
       handleClose();
     } catch (error) {
       console.log(error);
@@ -130,7 +132,7 @@ const UserPosts = ({
       );
       await addPost.wait();
       setUserPosts(newPostArray);
-      setState(!state);
+      setData(!data);
       setTweetModal("");
       setTweetModalLength(240);
       handleCloseModal();
@@ -139,47 +141,46 @@ const UserPosts = ({
       console.log(error);
     }
   };
+  const allPosts = async () => {
+    const userPostData = await twitterContract.getUserPosts(account);
+    const newData = await Promise.all(
+      userPostData.map(async (id) => {
+        const singlePostData = await twitterContract.getPostDetails(id);
+        const userData = await authContract.getUserInfo(
+          singlePostData.userAddress
+        );
+        const isLikeByUser = await twitterContract.getPostLikedByUser(
+          singlePostData.postId
+        );
+        const postUserAddress = userData[0];
+        const postUserName = userData[1];
+        const postTime = Number(singlePostData.postTime["_hex"]);
+        const likes = Number(singlePostData.likes["_hex"]);
+        const postId = Number(singlePostData.postId);
+        const commentsLength = await twitterContract.getComments(
+          singlePostData.postId
+        );
+        return {
+          userAvatarTxt: postUserName.charAt(0),
+          postId: postId,
+          postUserAddress: postUserAddress,
+          content: singlePostData.content,
+          postTime: postTime,
+          likes: likes,
+          postUserName: postUserName,
+          isLike: isLikeByUser,
+          postCommentLength: commentsLength.length,
+        };
+      })
+    );
+    newData.sort((a, b) => b.postTime - a.postTime);
+    setUserPosts(newData);
+    setUserAvatarTxt(userDetails.username.charAt(0));
+  };
 
   useEffect(() => {
-    const allPosts = async () => {
-      const userPostData = await twitterContract.getUserPosts(account);
-      const newData = await Promise.all(
-        userPostData.map(async (id) => {
-          const singlePostData = await twitterContract.getPostDetails(id);
-          const userData = await authContract.getUserInfo(
-            singlePostData.userAddress
-          );
-          const isLikeByUser = await twitterContract.getPostLikedByUser(
-            singlePostData.postId
-          );
-          const postUserAddress = userData[0];
-          const postUserName = userData[1];
-          const postTime = Number(singlePostData.postTime["_hex"]);
-          const likes = Number(singlePostData.likes["_hex"]);
-          const postId = Number(singlePostData.postId);
-          const commentsLength = await twitterContract.getComments(
-            singlePostData.postId
-          );
-          return {
-            userAvatarTxt: postUserName.charAt(0),
-            postId: postId,
-            postUserAddress: postUserAddress,
-            content: singlePostData.content,
-            postTime: postTime,
-            likes: likes,
-            postUserName: postUserName,
-            isLike: isLikeByUser,
-            postCommentLength: commentsLength.length,
-          };
-        })
-      );
-      // newData.sort((a, b) => b.postTime - a.postTime);
-      setUserPosts(newData);
-      setCountTweet(newData.length);
-      setUserAvatarTxt(userDetails.username.charAt(0));
-    };
     twitterContract && allPosts();
-  }, [state, twitterContract]);
+  }, [data, twitterContract]);
 
   return (
     <>
@@ -324,21 +325,16 @@ const UserPosts = ({
                       />
                     </Box>
                     <Box className="bottomTweetComponent">
-                      <IconButton sx={{ color: "#1da1f2" }}>
-                        <ImageOutlinedIcon />
-                      </IconButton>
-                      <IconButton sx={{ color: "#1da1f2" }}>
-                        <GifBoxOutlinedIcon />
-                      </IconButton>
-                      <IconButton sx={{ color: "#1da1f2" }}>
-                        <BarChartOutlinedIcon />
-                      </IconButton>
-                      <IconButton sx={{ color: "#1da1f2" }}>
-                        <SentimentSatisfiedSharpIcon />
-                      </IconButton>
-                      <IconButton sx={{ color: "#1da1f2" }}>
-                        <CalendarTodayOutlinedIcon />
-                      </IconButton>
+                      {TweetIconList.map((item, index) => {
+                        return (
+                          <IconButton
+                            key={index}
+                            sx={{ color: `${item.color}` }}
+                          >
+                            {item.iconName}
+                          </IconButton>
+                        );
+                      })}
                       <Box sx={{ flexGrow: 1 }} />
                       <Typography sx={{ marginRight: "20px" }}>
                         {tweetModalLength}/240

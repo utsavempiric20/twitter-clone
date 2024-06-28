@@ -13,6 +13,8 @@ const MyRoutes = (props) => {
     account,
     userDetails,
     setUserDetails,
+    getData,
+    setGetData,
   } = props;
 
   let location = useLocation();
@@ -27,6 +29,8 @@ const MyRoutes = (props) => {
           account={account}
           userDetails={userDetails}
           setUserDetails={setUserDetails}
+          getData={getData}
+          setGetData={setGetData}
         />
       )}
       <Routes>
@@ -53,6 +57,8 @@ const MyRoutes = (props) => {
               authContract={authContract}
               twitterContract={twitterContract}
               account={account}
+              getData={getData}
+              setGetData={setGetData}
             />
           }
         />

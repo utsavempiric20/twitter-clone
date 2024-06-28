@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  CircularProgress,
   Divider,
   IconButton,
   TextField,
@@ -23,23 +24,20 @@ import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined
 import "../../css/Tweet.css";
 import { ethers } from "ethers";
 
-const SinglePost = ({
-  authContract,
-  twitterContract,
-  account,
-  userDetails,
-}) => {
+const SinglePost = (props) => {
+  const { authContract, twitterContract, userDetails } = props;
   const { type, postId } = useParams();
   const [post, setPost] = useState([]);
   const [addComment, setAddComment] = useState("");
   const [commentLength, setCommentLength] = useState(240);
   const [comments, setComments] = useState([]);
-  const [state, setState] = useState(false);
+  const [data, setData] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const numToByte = ethers.utils.hexZeroPad(
     ethers.utils.hexlify(Number(postId)),
     4
   );
+  const typeOfPost = Number(type);
 
   const handleAddComment = (e) => {
     const newValue = e.target.value;
@@ -50,15 +48,13 @@ const SinglePost = ({
   const addUsersComment = async (event) => {
     event.preventDefault();
     try {
-      console.log(addComment);
-      // setComments([...comments, { comment: addComment }]);
       const commentResponse =
-        type == 1
+        typeOfPost === 1
           ? await twitterContract.addComment(numToByte, addComment)
           : await twitterContract.addReply(numToByte, addComment);
       await commentResponse.wait();
       setAddComment("");
-      setState(!state);
+      setData(!data);
     } catch (error) {
       console.log(error);
     }
@@ -71,16 +67,20 @@ const SinglePost = ({
       if (newArray.isLike) {
         newArray.isLike = false;
         newArray.likes -= 1;
-        type == 1
-          ? await twitterContract.disLikePost(postId)
-          : await twitterContract.dislikeOnComments(postId);
+        const dislikePostResponse =
+          typeOfPost === 1
+            ? await twitterContract.disLikePost(postId)
+            : await twitterContract.dislikeOnComments(postId);
+        await dislikePostResponse.wait();
         setPost(newArray);
       } else {
         newArray.isLike = true;
         newArray.likes += 1;
-        type == 1
-          ? await twitterContract.likePost(postId)
-          : await twitterContract.addLikeOnComments(postId);
+        const likePostResponse =
+          typeOfPost === 1
+            ? await twitterContract.likePost(postId)
+            : await twitterContract.addLikeOnComments(postId);
+        await likePostResponse.wait();
         setPost(newArray);
       }
     } catch (error) {
@@ -114,137 +114,136 @@ const SinglePost = ({
     }
   };
 
+  const fetchPost = async () => {
+    const singlePostData = await twitterContract.getPostDetails(numToByte);
+    const userData = await authContract.getUserInfo(singlePostData.userAddress);
+    const isLikeByUser = await twitterContract.getPostLikedByUser(
+      singlePostData.postId
+    );
+    const commentsLength = await twitterContract.getComments(
+      singlePostData.postId
+    );
+    const postUserAddress = userData[0];
+    const postUserName = userData[1];
+    const postTime = Number(singlePostData.postTime["_hex"]);
+    const likes = Number(singlePostData.likes["_hex"]);
+
+    setPost({
+      userAvatarTxt: postUserName.charAt(0),
+      postId: Number(postId),
+      postUserAddress: postUserAddress,
+      content: singlePostData.content,
+      postTime: postTime,
+      likes: likes,
+      postUserName: postUserName,
+      isLike: isLikeByUser,
+      postCommentLength: commentsLength.length,
+    });
+  };
+
+  const fetchSingleComment = async () => {
+    const singlePostData = await twitterContract.getCommentInfo(numToByte);
+    const userData = await authContract.getUserInfo(singlePostData.user);
+    const isLikeByUser = await twitterContract.getCommentLikedByUser(
+      singlePostData.commentId
+    );
+    const commentsLength = await twitterContract.getReplyOnComment(
+      singlePostData.commentId
+    );
+    const postUserAddress = userData[0];
+    const postUserName = userData[1];
+    const postTime = Number(singlePostData.commentTime["_hex"]);
+    const likes = Number(singlePostData.commentTotalLike["_hex"]);
+
+    setPost({
+      userAvatarTxt: postUserName.charAt(0),
+      postId: Number(postId),
+      postUserAddress: postUserAddress,
+      content: singlePostData.comment,
+      postTime: postTime,
+      likes: likes,
+      postUserName: postUserName,
+      isLike: isLikeByUser,
+      postCommentLength: commentsLength.length,
+    });
+  };
+
+  const fetchComment = async () => {
+    const commentsData = await twitterContract.getComments(numToByte);
+    const newData = await Promise.all(
+      commentsData.map(async (commentId) => {
+        const singleComment = await twitterContract.getCommentInfo(commentId);
+        const userData = await authContract.getUserInfo(singleComment.user);
+        const isLikeComment = await twitterContract.getCommentLikedByUser(
+          commentId
+        );
+        const commentsLength = await twitterContract.getReplyOnComment(
+          singleComment.commentId
+        );
+        return {
+          commentAvatarTxt: userData[1].charAt(0),
+          user: singleComment.user,
+          postId: Number(singleComment.postId),
+          commentId: Number(singleComment.commentId),
+          comment: singleComment.comment,
+          commentTotalLike: Number(singleComment.commentTotalLike["_hex"]),
+          postUserName: userData[1],
+          isLikeComment: isLikeComment,
+          commentTime: singleComment.commentTime,
+          postCommentLength: commentsLength.length,
+        };
+      })
+    );
+    newData.sort((a, b) => b.commentTime - a.commentTime);
+    setComments(newData);
+  };
+
+  const fetchCommentReply = async () => {
+    const commentsData = await twitterContract.getReplyOnComment(numToByte);
+    const newData = await Promise.all(
+      commentsData.map(async (commentId) => {
+        const singleComment = await twitterContract.getCommentInfo(commentId);
+        const userData = await authContract.getUserInfo(singleComment.user);
+        const isLikeComment = await twitterContract.getCommentLikedByUser(
+          commentId
+        );
+        const commentsLength = await twitterContract.getReplyOnComment(
+          singleComment.commentId
+        );
+
+        return {
+          commentAvatarTxt: userData[1].charAt(0),
+          user: singleComment.user,
+          postId: Number(singleComment.postId),
+          commentId: Number(singleComment.commentId),
+          comment: singleComment.comment,
+          commentTotalLike: Number(singleComment.commentTotalLike["_hex"]),
+          postUserName: userData[1],
+          isLikeComment: isLikeComment,
+          commentTime: singleComment.commentTime,
+          postCommentLength: commentsLength.length,
+        };
+      })
+    );
+    newData.sort((a, b) => b.commentTime - a.commentTime);
+    setComments(newData);
+  };
+
   useEffect(() => {
-    const fetchPost = async () => {
-      const singlePostData = await twitterContract.getPostDetails(numToByte);
-      const userData = await authContract.getUserInfo(
-        singlePostData.userAddress
-      );
-      const isLikeByUser = await twitterContract.getPostLikedByUser(
-        singlePostData.postId
-      );
-      const commentsLength = await twitterContract.getComments(
-        singlePostData.postId
-      );
-      const postUserAddress = userData[0];
-      const postUserName = userData[1];
-      const postTime = Number(singlePostData.postTime["_hex"]);
-      const likes = Number(singlePostData.likes["_hex"]);
-
-      setPost({
-        userAvatarTxt: postUserName.charAt(0),
-        postId: Number(postId),
-        postUserAddress: postUserAddress,
-        content: singlePostData.content,
-        postTime: postTime,
-        likes: likes,
-        postUserName: postUserName,
-        isLike: isLikeByUser,
-        postCommentLength: commentsLength.length,
-      });
-    };
-
-    const fetchSingleComment = async () => {
-      const singlePostData = await twitterContract.getCommentInfo(numToByte);
-      const userData = await authContract.getUserInfo(singlePostData.user);
-      const isLikeByUser = await twitterContract.getCommentLikedByUser(
-        singlePostData.commentId
-      );
-      const commentsLength = await twitterContract.getReplyOnComment(
-        singlePostData.commentId
-      );
-      const postUserAddress = userData[0];
-      const postUserName = userData[1];
-      const postTime = Number(singlePostData.commentTime["_hex"]);
-      const likes = Number(singlePostData.commentTotalLike["_hex"]);
-
-      setPost({
-        userAvatarTxt: postUserName.charAt(0),
-        postId: Number(postId),
-        postUserAddress: postUserAddress,
-        content: singlePostData.comment,
-        postTime: postTime,
-        likes: likes,
-        postUserName: postUserName,
-        isLike: isLikeByUser,
-        postCommentLength: commentsLength.length,
-      });
-    };
-
-    const fetchComment = async () => {
-      const commentsData = await twitterContract.getComments(numToByte);
-      const newData = await Promise.all(
-        commentsData.map(async (commentId) => {
-          const singleComment = await twitterContract.getCommentInfo(commentId);
-          const userData = await authContract.getUserInfo(singleComment.user);
-          const isLikeComment = await twitterContract.getCommentLikedByUser(
-            commentId
-          );
-          const commentsLength = await twitterContract.getReplyOnComment(
-            singleComment.commentId
-          );
-          return {
-            commentAvatarTxt: userData[1].charAt(0),
-            user: singleComment.user,
-            postId: Number(singleComment.postId),
-            commentId: Number(singleComment.commentId),
-            comment: singleComment.comment,
-            commentTotalLike: Number(singleComment.commentTotalLike["_hex"]),
-            postUserName: userData[1],
-            isLikeComment: isLikeComment,
-            commentTime: singleComment.commentTime,
-            postCommentLength: commentsLength.length,
-          };
-        })
-      );
-      newData.sort((a, b) => b.commentTime - a.commentTime);
-      setComments(newData);
-    };
-
-    const fetchCommentReply = async () => {
-      const commentsData = await twitterContract.getReplyOnComment(numToByte);
-      const newData = await Promise.all(
-        commentsData.map(async (commentId) => {
-          const singleComment = await twitterContract.getCommentInfo(commentId);
-          const userData = await authContract.getUserInfo(singleComment.user);
-          const isLikeComment = await twitterContract.getCommentLikedByUser(
-            commentId
-          );
-          const commentsLength = await twitterContract.getReplyOnComment(
-            singleComment.commentId
-          );
-
-          return {
-            commentAvatarTxt: userData[1].charAt(0),
-            user: singleComment.user,
-            postId: Number(singleComment.postId),
-            commentId: Number(singleComment.commentId),
-            comment: singleComment.comment,
-            commentTotalLike: Number(singleComment.commentTotalLike["_hex"]),
-            postUserName: userData[1],
-            isLikeComment: isLikeComment,
-            commentTime: singleComment.commentTime,
-            postCommentLength: commentsLength.length,
-          };
-        })
-      );
-      newData.sort((a, b) => b.commentTime - a.commentTime);
-      setComments(newData);
-    };
     setIsLoading(true);
-    type == 1
+    typeOfPost === 1
       ? twitterContract && fetchPost()
       : twitterContract && fetchSingleComment();
-    type == 1
+    typeOfPost === 1
       ? twitterContract && fetchComment()
       : twitterContract && fetchCommentReply();
     setIsLoading(false);
-  }, [state, twitterContract, postId]);
+  }, [data, twitterContract, postId]);
 
   return (
     <>
       {isLoading ? (
-        <></>
+        <CircularProgress color="success" />
       ) : (
         <Box className="singlePostMainComponent">
           <Box component="div" className="userPost" key={post.id}>

@@ -5,7 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import AlertComponent from "../components/AlertComponent";
 import ProfilePic from "../assets/profile.jpeg";
 
-const Register = ({ authContract, account }) => {
+const Register = (props) => {
+  const { authContract, account } = props;
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
@@ -47,17 +48,11 @@ const Register = ({ authContract, account }) => {
         handleConfirmAlert();
         return;
       }
-      console.log(registerInfo);
       const response = await authContract.register(
         registerInfo.username,
         account
       );
-      console.log("register ", account);
-      const getUserInfo = await authContract.getUserInfo(account);
-      console.log(getUserInfo);
-      console.log("response", response);
       await response.wait();
-      console.log("register successfully");
       setRegisterInfo({
         username: "",
         email: "",

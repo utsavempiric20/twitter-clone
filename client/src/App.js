@@ -21,6 +21,7 @@ function App() {
     username: null,
     registerTime: null,
   });
+  const [getData, setGetData] = useState(false);
 
   const connectWallet = async () => {
     const authContractAbi = authAbi.abi;
@@ -66,6 +67,8 @@ function App() {
           account={account}
           userDetails={userDetails}
           setUserDetails={setUserDetails}
+          getData={getData}
+          setGetData={setGetData}
         />
       </Router>
     </>

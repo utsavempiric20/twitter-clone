@@ -1,10 +1,11 @@
 import "../css/Login.css";
 import twitter from "../assets/Vector.png";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AlertComponent from "../components/AlertComponent";
 
-const Login = ({ authContract, account, userDetails, setUserDetails }) => {
+const Login = (props) => {
+  const { authContract, account } = props;
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
   const [loginInfo, setLoginInfo] = useState({
@@ -32,12 +33,10 @@ const Login = ({ authContract, account, userDetails, setUserDetails }) => {
       const response = await authContract.logIn(account);
       await response.wait();
       const getUserInfo = await authContract.getUserInfo(account);
-      console.log(getUserInfo);
       const username = getUserInfo[1];
       const timeToHex = getUserInfo[2];
       const registerTime = Number(timeToHex["_hex"]);
       const userObj = { username, registerTime };
-      console.log("userDetails", userDetails);
       localStorage.setItem("userInfo", JSON.stringify(userObj));
       navigate("/home", { replace: true });
       setLoginInfo({ username: "", password: "" });

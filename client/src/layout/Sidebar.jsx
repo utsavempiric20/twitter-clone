@@ -1,6 +1,7 @@
 import {
   Avatar,
   Box,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -30,14 +31,22 @@ import GifBoxOutlinedIcon from "@mui/icons-material/GifBoxOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import SentimentSatisfiedSharpIcon from "@mui/icons-material/SentimentSatisfiedSharp";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AlertComponent from "../components/AlertComponent";
 
 const SideBar = (props) => {
   let navigate = useNavigate();
-  let { authContract, twitterContract, account, userDetails, setUserDetails } =
-    props;
+  let {
+    authContract,
+    twitterContract,
+    account,
+    userDetails,
+    setUserDetails,
+    getData,
+    setGetData,
+  } = props;
   const IconList = [
     { text: "Home", icon: <HomeSharpIcon />, to: "/home" },
     { text: "Explore", icon: <TagOutlinedIcon />, to: "/explore" },
@@ -56,24 +65,6 @@ const SideBar = (props) => {
     { text: "Profile", icon: <PermIdentityOutlinedIcon />, to: "/profile" },
     { text: "More", icon: <MoreHorizOutlinedIcon />, to: "/more" },
   ];
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  //   const date = new Date(2009, 10, 10);  // 2009-11-10
-  // const month = date.toLocaleString('default', { month: 'long' });
-  // console.log(month);
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
@@ -83,6 +74,13 @@ const SideBar = (props) => {
   const [userLogOutAlert, setUserLogOutAlert] = useState(false);
   const [userAvatarTxt, setUserAvatarTxt] = useState("");
   const [loading, setLoading] = useState(false);
+  const TweetIconList = [
+    { iconName: <ImageOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <GifBoxOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <BarChartOutlinedIcon />, color: "#1da1f2" },
+    { iconName: <SentimentSatisfiedSharpIcon />, color: "#1da1f2" },
+    { iconName: <CalendarTodayOutlinedIcon />, color: "#1da1f2" },
+  ];
   const handleUserLogOutAlert = () => {
     setUserLogOutAlert(true);
     setTimeout(() => {
@@ -103,6 +101,7 @@ const SideBar = (props) => {
       await addPost.wait();
       setTweetModal("");
       setTweetModalLength(240);
+      setGetData(!getData);
       handleClose();
     } catch (error) {
       console.log(error);
@@ -113,7 +112,6 @@ const SideBar = (props) => {
     try {
       const response = await authContract.logOut(account);
       await response.wait();
-      console.log(response);
       navigate("/", { replace: true });
       setUserDetails({
         username: null,
@@ -125,6 +123,7 @@ const SideBar = (props) => {
       console.log(error);
     }
   };
+
   useEffect(() => {
     setLoading(true);
     const userData = JSON.parse(localStorage.getItem("userInfo"));
@@ -134,12 +133,12 @@ const SideBar = (props) => {
     });
     setUserAvatarTxt(userData.username.charAt(0));
     setLoading(false);
-  }, [twitterContract, authContract]);
+  }, []);
 
   return (
     <>
       {loading ? (
-        <></>
+        <CircularProgress color="success" />
       ) : (
         <Box
           className="sideMain"
@@ -174,7 +173,7 @@ const SideBar = (props) => {
               style={{ bottom: 0 }}
               secondaryAction={
                 <IconButton edge="end" onClick={handleLogOut}>
-                  <MoreHorizOutlinedIcon />
+                  <LogoutIcon />
                 </IconButton>
               }
             >
@@ -191,14 +190,9 @@ const SideBar = (props) => {
                     }
                     secondary={
                       <Typography sx={{ color: "#5B7083", fontWeight: 500 }}>
-                        {
-                          months[
-                            new Date(userDetails.registerTime * 1000).getMonth()
-                          ]
-                        }{" "}
                         {new Date(
                           userDetails.registerTime * 1000
-                        ).getFullYear()}
+                        ).toDateString()}
                       </Typography>
                     }
                   />
@@ -229,21 +223,13 @@ const SideBar = (props) => {
                   />
                 </Box>
                 <Box className="bottomTweetComponent">
-                  <IconButton sx={{ color: "#1da1f2" }}>
-                    <ImageOutlinedIcon />
-                  </IconButton>
-                  <IconButton sx={{ color: "#1da1f2" }}>
-                    <GifBoxOutlinedIcon />
-                  </IconButton>
-                  <IconButton sx={{ color: "#1da1f2" }}>
-                    <BarChartOutlinedIcon />
-                  </IconButton>
-                  <IconButton sx={{ color: "#1da1f2" }}>
-                    <SentimentSatisfiedSharpIcon />
-                  </IconButton>
-                  <IconButton sx={{ color: "#1da1f2" }}>
-                    <CalendarTodayOutlinedIcon />
-                  </IconButton>
+                  {TweetIconList.map((item, index) => {
+                    return (
+                      <IconButton key={index} sx={{ color: `${item.color}` }}>
+                        {item.iconName}
+                      </IconButton>
+                    );
+                  })}
                   <Box sx={{ flexGrow: 1 }} />
                   <Typography sx={{ marginRight: "20px" }}>
                     {tweetModalLength}/240

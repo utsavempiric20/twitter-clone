@@ -8,22 +8,9 @@ import UserPosts from "../components/ProfileComponents/UserPosts";
 import UserLikes from "../components/ProfileComponents/UserLikes";
 import UserTweetNReply from "../components/ProfileComponents/UserTweetNReply";
 
-const Profile = ({ userDetails, authContract, twitterContract, account }) => {
+const Profile = (props) => {
+  const { userDetails, authContract, twitterContract, account } = props;
   const [countTweet, setCountTweet] = useState(0);
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
   const [value, setValue] = useState("1");
 
   const handleChange = (event, newValue) => {
@@ -53,10 +40,7 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
             @{userDetails.username}
           </Typography>
           <Typography className="tweetCount">
-            Joined{" "}
-            {/* {months[new Date(userDetails.registerTime * 1000).getMonth()]}{" "}
-            {new Date(userDetails.registerTime * 1000).getFullYear()} */}
-            {new Date(userDetails.registerTime * 1000).toDateString()}
+            Joined {new Date(userDetails.registerTime * 1000).toDateString()}
           </Typography>
         </Box>
         <Box className="tabComponent">
@@ -82,7 +66,6 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
                 authContract={authContract}
                 twitterContract={twitterContract}
                 account={account}
-                setCountTweet={setCountTweet}
                 userDetails={userDetails}
               />
             </TabPanel>
@@ -91,6 +74,8 @@ const Profile = ({ userDetails, authContract, twitterContract, account }) => {
                 authContract={authContract}
                 twitterContract={twitterContract}
                 account={account}
+                countTweet={countTweet}
+                setCountTweet={setCountTweet}
               />
             </TabPanel>
             <TabPanel value="3">
